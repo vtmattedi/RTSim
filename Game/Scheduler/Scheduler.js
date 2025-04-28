@@ -1,14 +1,7 @@
-import { DefaultColors, BasicConsole } from "../Base/ConsoleHelp.js";
-import {AlgoFactory} from "../Algorthims/AlgoFactory.js";
-const CH = new BasicConsole();
+import { DefaultColors, BasicConsole, ControlSequences } from "../Base/ConsoleHelp.js";
+import {AlgoFactory, AlgorithmModels} from "../Algorthims/AlgoFactory.js";
 
-const SchedulerTypes = {
-    ROUND_ROBIN: 0,
-    PRIORITY: 1,
-    ESF: 2,
-    FIFO: 3,
-    LIFO: 4
-};
+const CH = new BasicConsole();
 
 class TaskStates {
     static ready = CH.insert_color(DefaultColors.GREEN, 'READY');
@@ -19,10 +12,10 @@ class TaskStates {
 
 // All times are in time units.
 class Task {
-    constructor(duration, priority = 0, deadline = null, pinToCore = null) {
+    constructor(burstTime, priority = 0, deadline = null, pinToCore = null) {
         this.id = null;
-        this.duration = duration; // in time units
-        this.remainingTime = duration;
+        this.burstTime = burstTime; // in time units
+        this.remainingTime = burstTime;
         this.arrivalTime = null;
         this.completedTime = null;
         this.priority = priority; // 0 is the highest priority
@@ -65,14 +58,18 @@ class Task {
     setFormat(format) {
         this.format = format;
     }
-    getLine(size = 1) {
-        let line = this.format.char.repeat(size);
-        if (this.format.color) {
-            line = CH.insert_color(this.format.color, line);
+    static getLine(task, size = 1) {
+        let line = task.format.char.repeat(size);
+        line = " ".repeat(size) ;
+        if (task.format.color) {
+            line = CH.insert_color(task.format.color.replace("38","48"), line);
         }
-        if (this.format.background) {
-            line = CH.insert_color(this.format.background, line);
-        }
+        // console.log(line)
+        // console.log(task.format.color.replace("38","48"), line.replace(" ", "+").replace(ControlSequences.CSI, "ESC"));
+        // throw new Error("Debugging");
+        // if (task.format.background) {
+        //     line = CH.insert_color(task.format.background, line);
+        // }
         return line;
 
     }
@@ -84,7 +81,8 @@ class Scheduler {
         this.numProcessors = numProcessors;
         this.tasks = [];
         this.currentTasks = Array(numProcessors);
-        this.model = AlgoFactory.createAlgorithm("RoundRobin",{timeQuantum: 3}); // Default algorithm
+        this.lastValidTasks = [];
+        this.model = AlgoFactory.createAlgorithm(AlgorithmModels.SJF,{timeQuantum: 1}); // Default algorithm
         this.t = 0; // initial time in time units
     }
 
@@ -96,7 +94,7 @@ class Scheduler {
         this.tasks.push(task);
     }
     addRandomTask() {
-        const task = new Task(Math.round(Math.random() * 10 + 1), Math.round(Math.random() * 10 + 1), Math.random() > 0.5 ? null : Math.round(Math.random() * 10 + 1)); // Random duration between 1 and 10
+        const task = new Task(Math.round(Math.random() * 10 + 1), Math.round(Math.random() * 10 + 1), Math.random() > 0.5 ? null : Math.round(Math.random() * 10 + 1)); // Random burstTime between 1 and 10
         if (Math.random() > 0.5) {
             task.pinToCore = Math.floor(Math.random() * this.numProcessors); // Random core to pin to
         }
@@ -111,11 +109,14 @@ class Scheduler {
 
         const cpy_tasks = JSON.parse(JSON.stringify(this.tasks));
         const cpy_currentTasks = JSON.parse(JSON.stringify(this.currentTasks))
+        const cpy_valid_tasks = JSON.parse(JSON.stringify(this.lastValidTasks));
+        // Create a deep copy of the tasks array
         return {
-            t: this.t,
+            t: this.t -1, // return the last tick
             numProcessors: this.numProcessors,
             currentTasks: cpy_currentTasks,
-            tasks: cpy_tasks
+            tasks: cpy_tasks,
+            validTasks: cpy_valid_tasks
         }
     }
     tick() {
@@ -128,6 +129,7 @@ class Scheduler {
         }
         );
         const validtasks = this.model.sortTasks(this.tasks.filter(task => task.status === TaskStates.ready));
+        this.lastValidTasks = validtasks;
         this.currentTasks = Array(this.numProcessors).fill(null);
         let assigned = 0;
         let validTaskIndex = 0;
@@ -207,6 +209,13 @@ class Scheduler {
             }
         }, 100); // Check every 100ms
     }
+    Log(){
+        console.log("Scheduler Log: ");
+        console.log("Time: ", this.t);
+        console.log("Tasks: ", this.tasks.map(task => task.id));
+        console.log("Current Tasks: ", this.currentTasks.map(task => task ? task.id : null));
+        console.log("Last Valid Tasks: ", this.lastValidTasks.map(task => task.id));
+    }
 }
 
-export { Scheduler, Task, SchedulerTypes, TaskStates };
+export { Scheduler, Task, TaskStates };

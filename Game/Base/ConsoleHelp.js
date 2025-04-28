@@ -5,8 +5,8 @@
 import { getFiGlet } from '../Assets/Fonts.js';
 // ANSI control sequences => color = CSI n m
 class ControlSequences {
-    static get CSI() { return '\x1b['; }
     static get OSC() { return '\x1b]'; }
+    static get CSI() { return '\x1b['; }
     static get Reset() { return '\x1b[0m'; }
 }
 
@@ -377,26 +377,26 @@ class BasicConsole extends ConsoleImplementation {
         const centerLine = (text) => {
             if (typeof text !== "string") return undefined;
             let start = mode !== 1;
-            // let debug = "old: " + this.getLineWidth(text);
+            //let debug = "old: " + this.getLineWidth(text);
             while (this.getLineWidth(text) < size) {
                 if (start) text = char + text;
                 else text += char;
                 if (mode === 0)
                     start = !start;
             }
-            // console.log(debug, "new:" + this.getLineWidth(text));
+            //console.log(debug, "new:" + this.getLineWidth(text));
             return text;
         }
 
         if (input.includes('\n')) {
             let lines = input.split('\n');
-            const maxLength = Math.max(...lines.map(line => this.getLineWidth(line)));
-            lines = lines.map(line => {
-                while (this.getLineWidth(line) < maxLength) {
-                    line += ' ';
-                }
-                return line;
-            });
+            // const maxLength = Math.max(...lines.map(line => this.getLineWidth(line)));
+            // lines = lines.map(line => {
+            //     while (this.getLineWidth(line) < maxLength) {
+            //         line += ' ';
+            //     }
+            //     return line;
+            // });
             lines = lines.map(line => centerLine(line));
             return lines.join('\n');
         }
@@ -708,6 +708,20 @@ class BasicConsole extends ConsoleImplementation {
         });
         return res
     }
+    getHeight = ()=>
+    {
+        return process.stdout.rows;
+    }
+
+    set_cursor_pos = (x,y) =>{
+      
+        if (x < 0)
+            x = this.getWidth() + x
+        if (y < 0)
+            y = this.getHeight() + y
+       
+        this.write(ControlSequences.CSI + y + ";" + x + "H");
+       }
 
 }
 export {

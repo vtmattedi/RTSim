@@ -1,6 +1,7 @@
 class SchedulerAlgorithms {
     constructor() {
         this.name = "No Algorithm";
+        this.description = "No description available";
     }
     sortTasks(tasks) {
         // Sort the tasks based on the algorithm's criteria

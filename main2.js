@@ -5,7 +5,8 @@ import readline from 'readline';
 import { Simulator } from './Game/Sim.js';
 import { on } from 'events';
 import { getFiGlet } from './Game/Assets/Fonts.js';
-import { Scheduler, SchedulerTypes, TaskStates } from './Game/Scheduler/Scheduler.js';
+import { Scheduler, TaskStates } from './Game/Scheduler/Scheduler.js';
+import { Task } from './Game/Scheduler/Scheduler.js';
 const CH = new ConsoleImpl.BasicConsole();
 const Colors = ConsoleImpl.DefaultColors;
 process.stdin.setRawMode(true);
@@ -131,14 +132,45 @@ const printCurrentState = (sch) => {
     return str;
 }
 
+const processGraphSpr = (history, currentIndex) => {
+    let cores = "t:\n";
+    for (let i = 0; i < history[currentIndex].numProcessors; i++) {
+        cores += "Core " + i + ":\n";
+    }
+    const cores_len = cores.split("\n").reduce((max, line) => Math.max(max, line.length), 0);
+    cores = CH.hcenter(cores, cores_len, " ", 2);
+    const len_per_t = 3;
+    const num_of_t = Math.floor(CH.getWidth() / (len_per_t + 1)) - cores_len - 4;
+
+    let res = "";
+    for (let i = 0; i < num_of_t; i++) {
+        const index = currentIndex - i;
+        if (index >= 0) {
+            let currentSlice = CH.hcenter("" + history[index].t, len_per_t);
+            if (history[index].t > 999) {
+                currentSlice = currentSlice[0] + "." + currentSlice[currentSlice.length - 1];
+            }
+            currentSlice += "|\n";
+
+            for (let j = 0; j < history[index].numProcessors; j++) {
+                currentSlice += history[index].currentTasks[j] ? Task.getLine(history[index].currentTasks[j], len_per_t + 1) : "----";
+                currentSlice += "\n";
+            }
+            res = CH.merge(currentSlice, res, { padding: 0 });
+        }
+
+    }
+    return CH.merge(cores, res, { padding: 0 });
+}
+
 const processSpr = (sch) => {
-    let str = "+--Processors(#N)--+--TASK--+";
+    let str = "+-Processor-(#N)-+--TASK--+";
     str += "\n";
     for (let i = 0; i < sch.numProcessors; i++) {
         str += "|";
-        str += CH.hcenter("Core " + i, 18);
+        str += CH.hcenter("Core " + i, 16);
         str += "|";
-        let task = sch.currentTasks[i] ? "TASK: " + CH.insert_color(sch.currentTasks[i].format.color, "" + sch.currentTasks[i].id) : "IDLE";
+        let task = sch.currentTasks[i] ? "ID: " + CH.insert_color(sch.currentTasks[i].format.color, "" + sch.currentTasks[i].id) : "IDLE";
         if (!sch.currentTasks[i]) {
             task = CH.insert_color(Colors.LIGHTBLACK_EX, task);
         }
@@ -146,73 +178,108 @@ const processSpr = (sch) => {
         str += "|";
         str += "\n";
     }
-    str += "+------------------+--------+\n";
+    str += "+----------------+--------+\n";
     return str;
 }
 
 const taskSpr = (sch) => {
-    let str = "+--TASKS--+-REM-+-ARR-+-DEAD-+-PRIO-+-PIN-+-END-+--STATUS--+\n";
 
-    sch.tasks = sch.tasks.filter(task => task.status === TaskStates.running || task.status === TaskStates.ready || sch.t - task.completedTime <= 20);
-    sch.tasks.sort((a, b) => {
-        if (a.priority === b.priority) {
-            return a.arrivalTime - b.arrivalTime; // If priorities are equal, sort by arrival time
+    // sch.tasks = sch.tasks.filter(task => task.status === TaskStates.running || task.status === TaskStates.ready || sch.t - task.completedTime <= 20);
+    // sch.tasks.sort((a, b) => {
+    //     if (a.priority === b.priority) {
+    //         return a.arrivalTime - b.arrivalTime; // If priorities are equal, sort by arrival time
+    //     }
+    //     return b.priority - a.priority; // Sort by priority (highest first)
+    // });
+
+    const _maxRows = Math.round(CH.getHeight() / 2 - 10);
+    const genTasks = (taskArray, maxRows) => {
+        let str = "+--TASKS--+-REM-+-ARR-+-DEAD-+-PRIO-+-PIN-+-END-+--STATUS--+\n";
+        const procMaxRows = maxRows < taskArray.length
+        for (let i = 0; i < Math.min(taskArray.length, maxRows); i++) {
+            let line = "";
+            //line += "|";
+            line += CH.hcenter("ID: " + CH.insert_color(taskArray[i].format.color, "" + taskArray[i].id), 9);
+            line += "|";
+            line += CH.hcenter("" + taskArray[i].remainingTime, 5);
+            line += "|";
+            line += CH.hcenter("" + taskArray[i].arrivalTime, 5);
+            line += "|";
+            line += CH.hcenter(taskArray[i].deadline ? "" + (taskArray[i].arrivalTime + taskArray[i].deadline) : "---", 6);
+            line += "|";
+            line += CH.hcenter("" + taskArray[i].priority, 6);
+            line += "|";
+            line += CH.hcenter(taskArray[i].pinToCore !== null ? "" + taskArray[i].pinToCore : "---", 5);
+            line += "|";
+            line += CH.hcenter(taskArray[i].completedTime !== null ? "" + taskArray[i].completedTime : "---", 5);
+            line += "|";
+            line += CH.hcenter(taskArray[i].status, 10);
+            // line += "|";
+            if (taskArray[i].status == TaskStates.running) {
+                line = CH.force_insert_format(line,
+                    {
+                        decoration: [ConsoleImpl.Decorations.Bold, ConsoleImpl.Decorations.Underlined],
+                    });
+            }
+            str += "|" + line + "|\n";
         }
-        return b.priority - a.priority; // Sort by priority (highest first)
-    });
-
-    for (let i = 0; i < sch.tasks.length; i++) {
-        let line = "";
-        //line += "|";
-        line += CH.hcenter("ID: " + CH.insert_color(sch.tasks[i].format.color, "" + sch.tasks[i].id), 9);
-        line += "|";
-        line += CH.hcenter("" + sch.tasks[i].remainingTime, 5);
-        line += "|";
-        line += CH.hcenter("" + sch.tasks[i].arrivalTime, 5);
-        line += "|";
-        line += CH.hcenter(sch.tasks[i].deadline ? "" + (sch.tasks[i].arrivalTime + sch.tasks[i].deadline) : "---", 6);
-        line += "|";
-        line += CH.hcenter("" + sch.tasks[i].priority, 6);
-        line += "|";
-        line += CH.hcenter(sch.tasks[i].pinToCore !== null ? "" + sch.tasks[i].pinToCore : "---", 5);
-        line += "|";
-        line += CH.hcenter(sch.tasks[i].completedTime !== null ? "" + sch.tasks[i].completedTime : "---", 5);
-        line += "|";
-        line += CH.hcenter(sch.tasks[i].status, 10);
-        // line += "|";
-        if (sch.tasks[i].status == TaskStates.running) {
-            line = CH.force_insert_format(line,
-                {
-                    decoration: [ConsoleImpl.Decorations.Bold, ConsoleImpl.Decorations.Underlined],
-                });
-        }
-
-        str += "|" + line + "|\n";
+        if (procMaxRows)
+            str += "+" + CH.hcenter("+" + (taskArray.length - maxRows) + " total: " + taskArray.length, 58) + "+\n";
+        str += "+---------+-----+-----+------+------+-----+-----+----------+\n";
+        return str;
     }
-    str += "+---------+-----+-----+------+------+-----+-----+----------+\n";
-    return str;
+    const titles =
+        [
+            CH.hcenter(CH.insert_format({
+                decoration: [
+                    ConsoleImpl.Decorations.Bold, ConsoleImpl.Decorations.Underlined]
+            }
+                , "Processor Task List"), 60),
+            CH.hcenter(CH.insert_format({
+                decoration: [
+                    ConsoleImpl.Decorations.Bold, ConsoleImpl.Decorations.Underlined]
+            }
+                , "Recently Fininshed Tasks"), 60)
+        ]
+    const valid = titles[0] + "\n" + genTasks(sch.validTasks, _maxRows);
+    const finished = titles[1] + "\n" + genTasks(sch.tasks.filter(task => task.completedTime !== null && sch.t - task.completedTime < 20).sort((a, b) => {
+        if (a.completedTime === b.completedTime) {
+            return a.arrivalTime - b.arrivalTime; // If completed times are equal, sort by arrival time
+        }
+        return a.completedTime - b.completedTime;
+    }), _maxRows);
 
-
+    return CH.merge(valid, finished, { padding: 2 });
 }
 
-
 const sch = new Scheduler(4);
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 15; i++) {
     sch.addRandomTask();
 }
 
-
-
-
-
-
-
 const schedulerFrame = (snap) => {
     CH.clear_screen();
+    CH.printFigLet("Simulation");
     //console.log(CH.getWidth());
-    CH.hprint(`Processors: ${snap.numProcessors} Type: ${sch.model.name} Time: ${snap.t} \n`);
+    CH.hprint(`\nProcessors: ${snap.numProcessors} Type: ${sch.model.name} Time: ${snap.t} \n`);
     const spr1 = processSpr(snap);
     const spr2 = taskSpr(snap);
+    const spr3 = processGraphSpr(history, currentSnap);
+    const final = CH.merge(spr1, spr3, { padding: 4 });
+    CH.print(final);
+    if (CH.getWidth() < 122) {
+        const valid = spr2.split("\n").map(line => {
+            return CH.getSafeSubstring(line, 0, 59);
+        }).filter(line => line != " ".repeat(60)).join("\n");
+        const finished = spr2.split("\n").map(line => {
+            return CH.getSafeSubstring(line, 61, 122);
+        }).filter(line => line != " ".repeat(60)).join("\n");
+        CH.hprint(valid);
+        CH.hprint(finished);
+    }
+    else
+        CH.hprint(spr2);
+    return;
     if (CH.getWidth() > 93) {
         const final = CH.merge(spr1, spr2);
         CH.hprint(final);
@@ -223,13 +290,9 @@ const schedulerFrame = (snap) => {
     }
     //const width = final.split("\n").reduce((max, line) => Math.max(max, CH.getLineWidth(line)), 0);
     //console.log(CH.getWidth(), width);
-    console.log(sch.model.queue.map((item, index) => {
-        return {
-            index: index,
-            id: item.task.id,
-            t: item.timeRemaining
-        }
-    }));
+    CH.set_cursor_pos(0, -1 * (sch.numProcessors + 10));
+    const spr = processGraphSpr(history, currentSnap);
+    CH.print(CH.hcenter(spr, -1, " ", 1));
 }
 
 const tickScheduler = () => {
@@ -239,22 +302,20 @@ const tickScheduler = () => {
     schedulerFrame(snap);
 }
 
+let p = null;
 
 const myTick = () => {
-    setTimeout(() => {
+    p = setTimeout(() => {
         tickScheduler();
         currentSnap = history.length - 1;
-        if (sch.t < 100) {
-            if (Math.random() > 0.75) {
-                sch.addRandomTask();
-                schedulerFrame(history[history.length - 1]);
-            }
-            myTick();
+        if (Math.random() > 0.75) {
+            sch.addRandomTask();
+            schedulerFrame(history[history.length - 1]);
         }
-    }, 100);
+        myTick();
+    }, 1);
 }
 
-// myTick();
 
 process.stdout.on('resize', () => {
     schedulerFrame(history[history.length - 1]);
@@ -294,6 +355,19 @@ process.stdin.on('keypress', (key, data) => {
         sch.addRandomTask();
         currentSnap = history.length - 1;
         schedulerFrame(history[currentSnap]);
+    }
+    if (input == "p") {
+        if (p === null) {
+            myTick();
+        }
+        else {
+            clearTimeout(p);
+            p = null;
+        }
+
+    }
+    if (input == "l") {
+       console.log(CH.getWidth(), CH.getHeight());
     }
 
     if (input == "arrowright") {

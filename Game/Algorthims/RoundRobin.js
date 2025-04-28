@@ -27,7 +27,7 @@ class RoundRobin extends SchedulerAlgorithms {
         for (let i = 0; i < tasks.length; i++) {
             const exist = this.queue.find(task => task.task.id === tasks[i].id);
             if (!exist) {
-                this.queue.push({task: orderedTasks[i], timeRemaining: this.timeQuantum});
+                this.queue.push({task: tasks[i], timeRemaining: this.timeQuantum});
             }
         }
         // take tasks from the queue that are not in tasks
