@@ -1,0 +1,30 @@
+{
+  "name": "consoleadventure",
+  "version": "0.2.2",
+  "description": "Console Adventure Game",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "github.com/vtmattedi/consoleadventure"
+  },
+  "keywords": [
+    "console",
+    "adventure",
+    "game"
+  ],
+  "author": "Vitor Mattedi",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.11.1",
+    "esbuild": "^0.25.3",
+    "globals": "^15.10.0"
+  },
+  "dependencies": {
+    "eslint": "^9.25.1",
+    "sound-play": "^1.1.0"
+  }
+}
