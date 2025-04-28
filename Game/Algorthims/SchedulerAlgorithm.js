@@ -1,4 +1,4 @@
-class SchedulerAlgorithm {
+class SchedulerAlgorithms {
     constructor() {
         this.name = "No Algorithm";
     }
@@ -12,4 +12,4 @@ class SchedulerAlgorithm {
 
 
 
-export { SchedulerAlgorithm };
+export { SchedulerAlgorithms };

@@ -1,7 +1,7 @@
 import { EDFAlgorithm } from "./EDF.js";
 import { FiFoAlgorithm } from "./FiFo.js";
-import { PrioritySchedulerAlgorithm } from "./PriorityFirst.js";
-import { RoundRobinAlgorithm } from "./RoundRobin.js";
+import { PriorityFirst } from "./PriorityFirst.js";
+import { RoundRobin } from "./RoundRobin.js";
 // Import all algorithms
 
 // Factory to create algorithms
@@ -14,11 +14,11 @@ class AlgoFactory {
             return new FiFoAlgorithm();
         }
         if (type === "Priority") {
-            return new PrioritySchedulerAlgorithm();
+            return new PriorityFirst();
         }
         if (type === "RoundRobin") {
 
-            return new RoundRobinAlgorithm(options?.timeQuantum);
+            return new RoundRobin(options?.timeQuantum);
         }
         throw new Error(`Unknown algorithm type: ${type}`);
     }

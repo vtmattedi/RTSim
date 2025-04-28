@@ -138,7 +138,10 @@ const processSpr = (sch) => {
         str += "|";
         str += CH.hcenter("Core " + i, 18);
         str += "|";
-        const task = sch.currentTasks[i] ? "TASK: " + CH.insert_color(sch.currentTasks[i].format.color, "" + sch.currentTasks[i].id) : "IDLE";
+        let task = sch.currentTasks[i] ? "TASK: " + CH.insert_color(sch.currentTasks[i].format.color, "" + sch.currentTasks[i].id) : "IDLE";
+        if (!sch.currentTasks[i]) {
+            task = CH.insert_color(Colors.LIGHTBLACK_EX, task);
+        }
         str += CH.hcenter(task, 8, " ", sch.currentTasks[i] ? 1 : 0);
         str += "|";
         str += "\n";

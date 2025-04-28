@@ -1,6 +1,6 @@
-import { SchedulerAlgorithm } from "./SchedulerAlgorithm.js";
+import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 
-class EDFAlgorithm  extends SchedulerAlgorithm {
+class EDFAlgorithm  extends SchedulerAlgorithms {
     constructor() {
         super();
         this.tasks = [];

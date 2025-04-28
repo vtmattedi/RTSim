@@ -1,6 +1,6 @@
-import { SchedulerAlgorithm } from "./SchedulerAlgorithm.js";
+import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 
-class PrioritySchedulerAlgorithm  extends SchedulerAlgorithm {
+class PriorityFirst  extends SchedulerAlgorithms {
     constructor() {
         super();
         this.tasks = [];
@@ -19,4 +19,4 @@ class PrioritySchedulerAlgorithm  extends SchedulerAlgorithm {
 
 }
 
-export { PrioritySchedulerAlgorithm };
+export { PriorityFirst };

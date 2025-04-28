@@ -1,6 +1,6 @@
-import { SchedulerAlgorithm } from "./SchedulerAlgorithm.js";
+import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 
-class FiFoAlgorithm  extends SchedulerAlgorithm {
+class FiFoAlgorithm  extends SchedulerAlgorithms {
     constructor() {
         super();
         this.tasks = [];

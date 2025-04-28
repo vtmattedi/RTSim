@@ -1,6 +1,6 @@
-import { SchedulerAlgorithm } from "./SchedulerAlgorithm.js";
+import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 
-class RoundRobinAlgorithm extends SchedulerAlgorithm {
+class RoundRobin extends SchedulerAlgorithms {
     constructor(timeQuantum) {
         super();
         this.queue = [];
@@ -62,4 +62,4 @@ class RoundRobinAlgorithm extends SchedulerAlgorithm {
 
 }
 
-export { RoundRobinAlgorithm };
+export { RoundRobin };

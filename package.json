@@ -1,7 +1,7 @@
 {
-  "name": "consoleadventure",
+  "name": "RTSim",
   "version": "0.2.2",
-  "description": "Console Adventure Game",
+  "description": "Real Time Scheduler Simulator",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,7 +9,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "github.com/vtmattedi/consoleadventure"
+    "url": "github.com/vtmattedi/RTSim"
   },
   "keywords": [
     "console",
@@ -24,7 +24,6 @@
     "globals": "^15.10.0"
   },
   "dependencies": {
-    "eslint": "^9.25.1",
-    "sound-play": "^1.1.0"
+    "eslint": "^9.25.1"
   }
 }
