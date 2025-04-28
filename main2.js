@@ -145,7 +145,7 @@ const processGraphSpr = (history, currentIndex) => {
     let res = "";
     for (let i = 0; i < num_of_t; i++) {
         const index = currentIndex - i;
-        if (index >= 0) {
+        if (index >= 0 && history[index].t >= 0) {
             let currentSlice = CH.hcenter("" + history[index].t, len_per_t);
             if (history[index].t > 999) {
                 currentSlice = currentSlice[0] + "." + currentSlice[currentSlice.length - 1];

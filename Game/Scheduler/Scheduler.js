@@ -82,7 +82,7 @@ class Scheduler {
         this.tasks = [];
         this.currentTasks = Array(numProcessors);
         this.lastValidTasks = [];
-        this.model = AlgoFactory.createAlgorithm(AlgorithmModels.SJF,{timeQuantum: 1}); // Default algorithm
+        this.model = AlgoFactory.createAlgorithm(AlgorithmModels.RoundRobin,{timeQuantum: 1}); // Default algorithm
         this.t = 0; // initial time in time units
     }
 
