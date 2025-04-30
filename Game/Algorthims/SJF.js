@@ -8,7 +8,7 @@ class SJFAlgorithm extends SchedulerAlgorithms {
         this.description = "Tasks are sorted based on their burst time in ascending order.";
     }
 
-    sortTasks(tasks) {
+    sortTasks(tasks, t) {
         // Sort the tasks based on their Remaining time (ascending order)
         // and then by arrival time (earliest first) if burst times are equal
         return tasks.sort((a, b) => {

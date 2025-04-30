@@ -13,6 +13,10 @@ readline.emitKeypressEvents(process.stdin);
 CH.setTitle('Scheduler Simulator');
 const sim = new Simulator();
 CH.show_cursor(false);
+console.clear();
+CH.clear_screen = () => {
+    process.stdout.write('\x1B[0f');
+}
 let lock = true;
 
 CH.merge(Assets.Logos.Mattedi, Assets.Logos.Works, { padding: 0 }).split('\n').forEach((line) => {

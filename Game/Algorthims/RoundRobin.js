@@ -7,7 +7,7 @@ class RoundRobin extends SchedulerAlgorithms {
         this.name = "Round Robin";
         this.timeQuantum = timeQuantum; // Time quantum for round-robin scheduling
     }
-    sortTasks(tasks) {
+    sortTasks(tasks, t) {
         if (this.queue.length === 0) {
 
             const orderedTasks =  tasks.sort( 

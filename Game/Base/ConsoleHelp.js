@@ -92,6 +92,7 @@ class DefaultColors {
 
     /// Custom colors 8 bit
     /// 0-7: standard colors (as in DefaultColors.Color)
+    /// cheat code for the 8 bit color: https://hexdocs.pm/color_palette/ansi_color_codes.html
     /// if num is an array of exactly 3 numbers, it will be a 24bit RGB color
     static custom_colors(num, background = false) {
         let text = '38';
@@ -220,7 +221,7 @@ class BasicConsole extends ConsoleImplementation {
         return lines.join('\n');
     }
     clear_screen = () => {
-        // this.write(ControlSequences.CSI + `2J`)
+
         console.clear();
     }
     write = (text) => {
@@ -254,14 +255,11 @@ class BasicConsole extends ConsoleImplementation {
 
     insert_format = (format = {
         color: DefaultColors.WHITE,
-        background: DefaultColors.BLACK,
+        background: DefaultColors.BG_BLACK,
         decoration: Decorations.None
     }, text) => {
         if (!text) return '';
-        if (text.includes(ControlSequences.Reset)) {
-            const color = format.color || DefaultColors.WHITE;
-            text = text.replaceAll(ControlSequences.Reset, ControlSequences.CSI + color + `m`);
-        }
+        
         let fmt = '';
         let addSemi = false;
         if (format.color) {
@@ -288,6 +286,11 @@ class BasicConsole extends ConsoleImplementation {
                 fmt += item;
                 addSemi = true;
             });
+        }
+
+        if (text.includes(ControlSequences.Reset)) {
+            const color = format.color || DefaultColors.WHITE;
+            text = text.replaceAll(ControlSequences.Reset,ControlSequences.Reset + ControlSequences.CSI + fmt + `m`);
         }
         return ControlSequences.CSI + fmt + `m` + text + ControlSequences.Reset
     }
@@ -407,6 +410,11 @@ class BasicConsole extends ConsoleImplementation {
     // Vertical center a sprite, mode => 0 = center, 1 = top, 2 = bottom
     // input should be an array of strings
     vcenter = (input, verticalLength, horizontalLength, char = " ", mode = 0) => {
+        let input_is_str = false;
+        if (typeof input === "string") {
+            input = input.split('\n');
+            input_is_str = true;
+        }
         const diff = verticalLength - input.length;
         let center = mode === 2;
         for (let i = 0; i < diff; i++) {
@@ -417,6 +425,9 @@ class BasicConsole extends ConsoleImplementation {
                 input.unshift(char.repeat(horizontalLength));
             if (mode === 0)
                 center = !center;
+        }
+        if (input_is_str) {
+            input = input.join('\n');
         }
         return input;
     }
@@ -475,7 +486,6 @@ class BasicConsole extends ConsoleImplementation {
         }
         return mergedLines;
     }
-
 
     paintSprite = (sprite, hcutoff, color) => {
         const sprite_array = sprite.split('\n');
@@ -553,7 +563,7 @@ class BasicConsole extends ConsoleImplementation {
     setTitle = (title) => {
         this.write('\x1b]2;' + title + '\x1b\x5c');
     }
-
+    // Print a line centered in the console
     hprint = (text) => {
         if (typeof text === 'undefined') {
             this.write('\n');
@@ -561,12 +571,26 @@ class BasicConsole extends ConsoleImplementation {
         else
             this.write(this.hcenter(text, this.getWidth()) + '\n');
     }
+    // Print a line centered in the console without \n at the end
+    hwrite = (text) => {
+        if (typeof text === 'undefined') {
+            this.write('\n');
+        }
+        else
+            this.write(this.hcenter(text, this.getWidth()));
+    }
 
     // Get a substring of a string, ignoring escape sequences
     // start and end are the indexes of the text without escape sequences
-    getSafeSubstring = (text, start, end) => {
+    getSafeSubstring = (text, start, end = 0) => {
         if (typeof text !== 'string') return ''; //Type check
+        const a = start; const b = end;
         if (end > text.length) end = text.length;//Range check
+        const realLen = this.getLineWidth(text);
+        if (end < 0) end = realLen + end;//Range check
+        if (start < 0) start = realLen + start;//Range check
+        //console.log(start, end, realLen, text.length, a, b);
+
 
         let trueIndex = 0;// index of the text without escape sequences
         let startIndex = 0;// first char
@@ -625,6 +649,7 @@ class BasicConsole extends ConsoleImplementation {
         return res;
     }
 
+    // Animate a sprite, ms is the time between each character, onEnd is a function to call when the animation ends
     animate = (sprite, ms, onEnd = null, center = false) => {
         const textArray = sprite.split('\n');
 
@@ -662,6 +687,8 @@ class BasicConsole extends ConsoleImplementation {
 
 
     }
+    
+    // Paint a sprite with a color, the color will be applied to each line of the sprite
     paint = (sprite, color) => {
         const sprite_array = sprite.split('\n');
         let res = '';
@@ -673,6 +700,16 @@ class BasicConsole extends ConsoleImplementation {
         return res;
     }
 
+ 
+    /**
+     * Prints stylized text using figlet with optional formatting, coloring, and centering.
+     *
+     * @param {string} text - The text to be stylized and printed.
+     * @param {Object} [options] - Optional settings for styling the text.
+     * @param {boolean} [options.center=true] - Whether to center the text horizontally.
+     * @param {string} [options.color] - The color to apply to the text.
+     * @param {string} [options.format] - The format to apply to the text (e.g., bold, italic).
+     */
     printFigLet = (text, options) => {
         let figlet = getFiGlet(text);
         const center = options?.center || true;
@@ -688,29 +725,46 @@ class BasicConsole extends ConsoleImplementation {
         this.print(figlet);
     }
     #select_format = null;
-    setSelectFormat = (format) => {
+    #select_transform = (text, selected)=> { return text; };
+    setSelectFormat = (format, transform) => {
         this.#select_format = format;
+        if (typeof transform === 'function') {
+            this.#select_transform = transform;
+        }
     }
-    selectHPrint = (text, selected = true) => {
+    selectHPrint = (text, selected = true, ignoreNewLine = false) => {
+        if (typeof this.#select_transform === 'function') {
+            text = this.#select_transform(text, selected);
+        }
         if (this.#select_format && selected)  {
             text = this.insert_format(this.#select_format, text);
         }
-        this.hprint(text);
-    }
-    force_insert_format = (text, format) => {
-         if (text.indexOf(ControlSequences.Reset ) == -1) {
-            return this.insert_format(format, text);
+        if (!ignoreNewLine) {
+            text = text + '\n';
         }
-        let split = text.split(ControlSequences.Reset);
-        let res = '';
-        split.forEach((item, index) => {
-            res += this.insert_format(format, item);
-        });
-        return res
+        this.hwrite(text);
     }
+    
     getHeight = ()=>
     {
         return process.stdout.rows;
+    }
+
+    getSize = (text)=>
+    {
+        if (typeof text !== 'string') return {width: 0, height: 0};
+        const w = text.split('\n').reduce((max, line) => Math.max(max, this.getLineWidth(line)), 0);
+        const h = text.split('\n').length;
+        return {width: w, height: h};
+    }
+
+    printAtPos = (text, x, y) => {
+        const lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            this.set_cursor_pos(x, y + i);
+            this.write(lines[i]);
+        }
+        
     }
 
     set_cursor_pos = (x,y) =>{

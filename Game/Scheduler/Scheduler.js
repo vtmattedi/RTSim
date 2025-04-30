@@ -1,5 +1,5 @@
 import { DefaultColors, BasicConsole, ControlSequences } from "../Base/ConsoleHelp.js";
-import {AlgoFactory, AlgorithmModels} from "../Algorthims/AlgoFactory.js";
+import { AlgoFactory, AlgorithmModels } from "../Algorthims/AlgoFactory.js";
 
 const CH = new BasicConsole();
 
@@ -10,6 +10,18 @@ class TaskStates {
     static completed = CH.insert_color(DefaultColors.BLUE, 'COMPLETED');
 }
 
+
+class SchedulerSnapshot {
+    constructor(t, model, numProcessors, currentTasks, tasks, validTasks) {
+        this.t = t; // time in time units
+        this.model = model; // name of the algorithm used
+        this.numProcessors = numProcessors; // number of processors
+        this.currentTasks = currentTasks; // array of tasks currently running on each processor
+        this.tasks = tasks; // array of all tasks
+        this.validTasks = validTasks; // array of valid tasks
+    }
+};
+
 // All times are in time units.
 class Task {
     constructor(burstTime, priority = 0, deadline = null, pinToCore = null) {
@@ -18,10 +30,15 @@ class Task {
         this.remainingTime = burstTime;
         this.arrivalTime = null;
         this.completedTime = null;
+        this.turnAround = null; // in time units, null if not completed
+        this.responseTime = null; // in time units, null if not yet started
+        this.waitingTime = null; // in time units, null if not yet started
         this.priority = priority; // 0 is the highest priority
         this.deadline = deadline; // in time units, null if no deadline
         this.pinToCore = pinToCore; // null if no pinning
         this.status = "CREATED"; // ready, running, completed
+        this.color = 0;// 8bit number for ANSI color using COLOR.custom_colors()
+        this.period = null; // 0 or null if no periodicity
         this.format = {
             color: DefaultColors.RED,
             background: null,
@@ -35,21 +52,27 @@ class Task {
     checkTask(t) {
         if (this.remainingTime <= 0 && this.status !== TaskStates.completed) {
             this.status = TaskStates.completed;
-            this.completedTime = t; 
+            this.completedTime = t;
         }
         this.checkDeadline(t);
-        
+
     }
     checkDeadline(t) {
         if (this.deadline && this.remainingTime > 0 && t >= this.arrivalTime + this.deadline && this.status !== TaskStates.failed) {
             this.status = TaskStates.failed;
             this.completedTime = t; // set remaining time to 0 to mark it as completed
+            this.turnAround = t - this.arrivalTime; // set turn around time to the time it completed
+            this.waitingTime = this.turnAround - this.burstTime; // set waiting time to the time it completed - burst time
             return false; // deadline missed
         }
         return true; // deadline not missed
     }
 
     tick(t) {
+        if (this.responseTime === null) 
+        {
+            this.responseTime = t - this.arrivalTime; // set response time to the time it started running
+        }
         if (this.remainingTime > 0) {
             this.remainingTime -= 1;
         }
@@ -58,11 +81,20 @@ class Task {
     setFormat(format) {
         this.format = format;
     }
+    static resetTimers (task)
+    {
+        task.remainingTime = task.burstTime;
+        task.completedTime = null;
+        task.turnAround = null; // in time units, null if not completed
+        task.responseTime = null; // in time units, null if not yet started
+        task.arrivalTime = null;
+        task.waitingTime = null;
+    }
     static getLine(task, size = 1) {
         let line = task.format.char.repeat(size);
-        line = " ".repeat(size) ;
+        line = " ".repeat(size);
         if (task.format.color) {
-            line = CH.insert_color(task.format.color.replace("38","48"), line);
+            line = CH.insert_color(task.format.color.replace("38", "48"), line);
         }
         // console.log(line)
         // console.log(task.format.color.replace("38","48"), line.replace(" ", "+").replace(ControlSequences.CSI, "ESC"));
@@ -82,13 +114,19 @@ class Scheduler {
         this.tasks = [];
         this.currentTasks = Array(numProcessors);
         this.lastValidTasks = [];
-        this.model = AlgoFactory.createAlgorithm(AlgorithmModels.RoundRobin,{timeQuantum: 1}); // Default algorithm
+        this.model = AlgoFactory.createAlgorithm(AlgorithmModels.SJF, { timeQuantum: 1 }); // Default algorithm
         this.t = 0; // initial time in time units
     }
 
     addTask(task) {
-        task.assignId(this.#taskIDs);
-        this.#taskIDs += 1;
+        if (task.id === null) {
+            task.assignId(this.#taskIDs);
+            this.#taskIDs += 1;
+        }
+        else{
+            Task.resetTimers(task); // reset the task timers if it already exists
+            // Meaning that the task is being added again and it is probably a periodic task
+        }
         task.arrivalTime = this.t;
         task.status = TaskStates.ready;
         this.tasks.push(task);
@@ -103,29 +141,34 @@ class Scheduler {
             background: DefaultColors.custom_colors(Math.round(Math.random() * 255, true)),
             char: Math.random() > 0.5 ? '*' : '#',
         });
+        task.color = Math.round(Math.random() * 255);
         this.addTask(task);
     }
     getSnapshot() {
-
+        // Create a deep copy of the tasks arrays
         const cpy_tasks = JSON.parse(JSON.stringify(this.tasks));
         const cpy_currentTasks = JSON.parse(JSON.stringify(this.currentTasks))
         const cpy_valid_tasks = JSON.parse(JSON.stringify(this.lastValidTasks));
-        // Create a deep copy of the tasks array
-        return {
-            t: this.t -1, // return the last tick
-            numProcessors: this.numProcessors,
-            currentTasks: cpy_currentTasks,
-            tasks: cpy_tasks,
-            validTasks: cpy_valid_tasks
-        }
+        
+        return new SchedulerSnapshot(
+            this.t -1, // time -1 since we do t+=1 at the end of the tick
+            this.model.name, // name of the algorithm used
+            this.numProcessors, // number of processors (Shouldnt change between snapshots)
+            cpy_currentTasks,// copy of the currentTasks
+            cpy_tasks,// copy of the tasks
+            cpy_valid_tasks// copy of the valid tasks. this should be sorted as seen by the scheduler
+        );
     }
     tick() {
         // pop tasks that are done
 
         this.tasks.forEach(task => {
-            task.checkTask(this.t - 1);
+            task.checkTask(this.t - 1); //check if the task is done or failed in the last tick 
             if (task.remainingTime > 0 && task.status === TaskStates.running)
                 task.status = TaskStates.ready;
+            if (task.period && task.arrivalTime + task.period >= this.t) {
+                this.addTask(task); 
+            }
         }
         );
         const validtasks = this.model.sortTasks(this.tasks.filter(task => task.status === TaskStates.ready));
@@ -209,7 +252,7 @@ class Scheduler {
             }
         }, 100); // Check every 100ms
     }
-    Log(){
+    Log() {
         console.log("Scheduler Log: ");
         console.log("Time: ", this.t);
         console.log("Tasks: ", this.tasks.map(task => task.id));
@@ -218,4 +261,4 @@ class Scheduler {
     }
 }
 
-export { Scheduler, Task, TaskStates };
+export { Scheduler, Task, TaskStates, SchedulerSnapshot };

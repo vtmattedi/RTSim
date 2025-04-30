@@ -7,7 +7,7 @@ class PriorityFirst  extends SchedulerAlgorithms {
         this.name = "Priority First";
     }
 
-    sortTasks(tasks) {
+    sortTasks(tasks, t) {
         // Sort the tasks based on their priority (highest priority first)
         return tasks.sort((a, b) => {
             if (a.priority === b.priority) {

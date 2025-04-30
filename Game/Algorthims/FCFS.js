@@ -1,17 +1,17 @@
 import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 
-class FiFoAlgorithm  extends SchedulerAlgorithms {
+class FCFSAlgorithm  extends SchedulerAlgorithms {
     constructor() {
         super();
         this.tasks = [];
-        this.name = "Priority First";
+        this.name = "First Come First Served (FCFS)";
     }
 
-    sortTasks(tasks) {
+    sortTasks(tasks, t) {
         // Sort the tasks based on their arrival time (earliest first)
         return tasks.sort((a, b) => a.arrivalTime - b.arrivalTime);
     }
 }
 
 
-export { FiFoAlgorithm };
+export { FCFSAlgorithm };

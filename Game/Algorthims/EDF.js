@@ -6,7 +6,7 @@ class EDFAlgorithm  extends SchedulerAlgorithms {
         this.tasks = [];
         this.name = "Earlier Deadline First";
     }
-    sortTasks(tasks) {
+    sortTasks(tasks, t) {
         // Sort the tasks based on their deadlines (earliest first)
         return tasks.sort((a, b) => 
         {
