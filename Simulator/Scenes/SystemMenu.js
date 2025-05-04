@@ -1,14 +1,15 @@
 import { Scene } from '../Engine/Scenes.js';
-import { BasicConsole, Decorations } from '../Engine/ConsoleHelp.js';
+import { BasicConsole, Decorations, DefaultColors } from '../Engine/ConsoleHelp.js';
 import { MsgBoxHandler } from '../Engine/messageBox.js';
 import SceneAlias from './Alias.js';
 import { AlgorithmModels } from '../Algorthims/AlgoFactory.js';
 import { formatText } from '../Scheduler/FramesHelper.js';
+import { Arrows, enter } from '../Engine/Symbols.js';
 
 const CH = new BasicConsole();
 
 
-const navOptions = ["Back",  "Set Tasks", "Start Simulation"];
+const navOptions = ["Back", "Set Tasks", "Start Simulation"];
 
 class SystemMenu extends Scene {
     constructor(options) {
@@ -20,25 +21,34 @@ class SystemMenu extends Scene {
         this.timeQuantumIndex = options.findIndex(o => o.name == "Time Quantum");
 
     }
-   
+
     onEnter() {
         this.currentIndex = 0;
         this.navIndex = 0;
-        this.showTimeQuantum = false;
+        this.showTimeQuantum = this.options.find(o => o.name == "Scheduler Algorithm")?.value === AlgorithmModels.RR;
         this.timeQuantumIndex = this.options.findIndex(o => o.name == "Time Quantum");
-        
+
     }
     draw() {
 
         let text = CH.getFigLet("Configure System");
         text += "\n";
-        text += "-".repeat(CH.getWidth()) + "\n";
+        text += "-".repeat(CH.getWidth()) + "\n\n";
         text += CH.hcenter(navOptions.map((option, index) => {
             return CH.hcenter(formatText(option, (this.navIndex == index) && this.currentIndex == -1, true), Math.floor(CH.getWidth() / option.length) - 4, " ");
-        }).join(" ")) + "\n"; 
+        }).join(" ")) + "\n";
         
-        text += this.options[this.currentIndex]?.desc + "\n";
-        
+        const cmds = [
+            { key: Arrows.upDown, desc: "Navigate." },
+            { key: `(${Arrows.up}) ${Arrows.leftRight}`, desc: "Change value. (x10)" },
+            { key: enter, desc: "Select." },
+          ]
+    
+          let cmdline =  CH.hcenter(cmds.map((obj) => {
+            return `\x1b[1m${obj.key}\x1b[0m: ${CH.insert_color(DefaultColors.LIGHTBLACK_EX, obj.desc)}`
+          }).join(" "));
+          text += "\n"+cmdline + "\n\n";
+
         for (let i = 0; i < this.options.length; i++) {
             if (i === this.timeQuantumIndex && !this.showTimeQuantum) {
                 continue;
@@ -48,28 +58,43 @@ class SystemMenu extends Scene {
                 val = this.options[i].transformValue(val);
             }
             let line = `${this.options[i].name}: ${val}`;
- 
+
             line = formatText(line, i === this.currentIndex, false);
             if (this.options[i].unit)
                 line += ` (${this.options[i].unit})`;
             text += CH.hcenter(line, CH.getWidth(), " ", this.alignment) + "\n";
         }
-        
+        text += "\n"
+        //Add description of the current option
+        // if we ha
+        if (this.currentIndex >= 0) {
+            let desc = "";
+            if (typeof this.options[this.currentIndex]?.desc === "function") {
+                desc = this.options[this.currentIndex]?.desc(this.options[this.currentIndex].value) + "\n";
+            }
+            else
+                desc = this.options[this.currentIndex]?.desc + "\n";
+
+            desc = CH.breakLine(desc, CH.getWidth() - 2);
+            text += CH.hcenter(desc) + "\n";
+        }
 
         return text;
 
     }
     handleInput(input, modifiers) {
         if (input == "arrowleft") {
-            if (this.currentIndex < 0)
-            {
+            if (this.currentIndex < 0) {
                 this.navIndex--;
-                return; 
+                if (this.navIndex < 0) {
+                    this.navIndex = 0;
+                }
+                return;
             }
 
 
             const option = this.options[this.currentIndex];
-            option.value -= option.step;
+            option.value -= option.step * (1 + modifiers.shift * 9);
             if (option.value < option.min) {
                 option.value = option.max;
             }
@@ -80,15 +105,17 @@ class SystemMenu extends Scene {
 
         }
         if (input == "arrowright") {
-            if (this.currentIndex < 0)
-            {
-                this.navIndex ++;
-                return;  
+            if (this.currentIndex < 0) {
+                this.navIndex++;
+                if (this.navIndex >= navOptions.length) {
+                    this.navIndex = navOptions.length - 1;
+                }
+                return;
             }
             const option = this.options[this.currentIndex];
-            option.value += option.step;
-            if (option.name == "Chance of a new task"){
-                option.value = Math.round(option.value*10)/10;
+            option.value += option.step * (1 + modifiers.shift * 9);;
+            if (option.name == "Chance of a new task") {
+                option.value = Math.round(option.value * 10) / 10;
             }
             if (option.value > option.max) {
                 option.value = option.min;
@@ -126,7 +153,7 @@ class SystemMenu extends Scene {
                     return SceneAlias.simulationScreen;
                 }
             }
-           
+
 
         }
     }

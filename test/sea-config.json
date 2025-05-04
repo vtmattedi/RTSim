@@ -1,1 +1,0 @@
-{ "main": "dist/bundle/index.cjs", "output": "./test/sea-prep.blob" } 

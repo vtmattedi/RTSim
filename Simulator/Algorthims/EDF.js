@@ -3,8 +3,9 @@ import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 class EDFAlgorithm  extends SchedulerAlgorithms {
     constructor() {
         super();
-        this.tasks = [];
         this.name = "Earlier Deadline First";
+        this.shortName = "EDF";
+        this.description = "Tasks are sorted based on their deadlines (earliest first).";
     }
     sortTasks(tasks, t) {
         // Sort the tasks based on their deadlines (earliest first)

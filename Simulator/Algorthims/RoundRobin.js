@@ -5,6 +5,8 @@ class RoundRobin extends SchedulerAlgorithms {
         super();
         this.queue = [];
         this.name = "Round Robin";
+        this.shortName = "RR";
+        this.description = "Tasks are processed in a circular manner, each getting a fixed time quantum.";
         this.timeQuantum = timeQuantum; // Time quantum for round-robin scheduling
     }
     sortTasks(tasks, t) {

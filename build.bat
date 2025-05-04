@@ -38,7 +38,7 @@ IF "%arg1%"=="-c" (
             set foldername=%arg1%
             )
     )
-if "%arg2%"=="" (
+if "%arg2%"=="-c" (
     set clean=1
 ) 
 set fp=%foldername%

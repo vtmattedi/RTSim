@@ -5,6 +5,7 @@ const SceneAlias ={
     mainMenu: "MainMenu",
     simulationScreen: "simulationScreen",
     systemMenu: "systemMenu",
+    infoScreen: "InfoScreen",	
 }
 
 export default SceneAlias;

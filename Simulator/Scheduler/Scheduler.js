@@ -233,7 +233,7 @@ class Scheduler {
 
         return new SchedulerSnapshot(
             this.t - 1, // time -1 since we do t+=1 at the end of the tick
-            this.model.name, // name of the algorithm used
+            this.model.shortName, // name of the algorithm used
             this.numProcessors, // number of processors (Shouldnt change between snapshots)
             cpy_currentTasks,// copy of the currentTasks
             cpy_tasks,// copy of the tasks
@@ -244,7 +244,7 @@ class Scheduler {
         // pop tasks that are done
 
         this.tasks.forEach(task => {
-            task.checkTask(this.t - 1); //check if the task is done or failed in the last tick 
+            task.checkTask(this.t); //check if the task is done or failed in the last tick 
             if (task.remainingTime > 0 && task.status === TaskStates.running)
                 task.status = TaskStates.ready;
             if (task.period && task.arrivalTime + task.period >= this.t) {

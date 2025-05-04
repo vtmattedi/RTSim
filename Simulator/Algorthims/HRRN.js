@@ -3,8 +3,9 @@ import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 class HRRNAlgorithm  extends SchedulerAlgorithms {
     constructor() {
         super();
-        this.tasks = [];
-        this.name = "Highest Response Ratio Next (HRRN)";
+        this.name = "Highest Response Ratio Next";
+        this.shortName = "HRRN";
+        this.description = "Tasks are sorted based on their response ratio (highest first).";
     }
 
     calculateResponseRatio(task, currentTime) {

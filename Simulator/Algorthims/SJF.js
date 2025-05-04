@@ -4,7 +4,8 @@ import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 class SJFAlgorithm extends SchedulerAlgorithms {
     constructor() {
         super();
-        this.name = "Shortest Job First (SJF)";
+        this.name = "Shortest Job First";
+        this.shortName = "SJF";
         this.description = "Tasks are sorted based on their burst time in ascending order.";
     }
 

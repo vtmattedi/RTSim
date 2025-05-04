@@ -18,7 +18,10 @@ const slots = [
   { name: "PRIO", width: 6, getValue: (task) => "" + task.priority },
   { name: "PIN", width: 5, getValue: (task) => task.pinToCore !== null ? "" + task.pinToCore : "---" },
   { name: "END", width: 5, getValue: (task) => task.completedTime !== null ? "" + task.completedTime : "---" },
-  { name: "STATUS", width: 10, getValue: (task) => task.status }
+  { name: "STATUS", width: 10, getValue: (task) => task.status },
+  { name: "TA", width: 3, getValue: (task) => task.turnAround !== null ? "" + task.turnAround : "---" },
+  { name: "RT", width: 3, getValue: (task) => task.responseTime !== null ? "" + task.responseTime : "---" },
+  { name: "WT", width: 3, getValue: (task) => task.waitingTime !== null ? "" + task.waitingTime : "---" },
 ]
 
 const tasksOption = [
@@ -108,6 +111,7 @@ class SimulationScreen extends Scene {
     let line = delta + "t = " + CH.hcenter("" + this.snapHistory[this.currentIndex].t, 7, "-", "left");
     line += this.currentIndex == this.snapHistory.length - 1 ? live : "-".repeat(6);
     line += this.timer ? auto : manual;
+    line = CH.hcenter("Model: " + this.snapHistory[this.currentIndex].model, CH.getWidth()/4, "-") + line;
     text += CH.hcenter(line, CH.getWidth(), "-") + "\n";
     text += genProcessorsFrame(this.snapHistory, this.currentIndex);
     text = text.split("\n").slice(0, -1);
@@ -158,11 +162,11 @@ class SimulationScreen extends Scene {
     stats.push("AVG TA: " +  (totalTA/length).toFixed(2) + " t.u.");
     stats.push("AVG RT: " +  (totalRT/length).toFixed(2) + " t.u.");
     stats.push("AVG WT: " +  (totalWT/length).toFixed(2) + " t.u.");
-    tasksSpr = CH.merge(
-      stats.join("\n"),
-      tasksSpr,
-      { padding: 0, align: "top" }
-    )
+    // tasksSpr = CH.merge(
+    //   stats.join("\n"),
+    //   tasksSpr,
+    //   { padding: 0, align: "top" }
+    // )
     text += CH.hcenter(tasksSpr);
     text += "\n";
     return text;
@@ -248,7 +252,9 @@ class SimulationScreen extends Scene {
       this.play(!this.timer);
     }
     else if (input == "a") {
-      this.scheduler.addRandomTask();
+      for (let i = 0; i < 1 + modifiers.shift * 9; i++) {
+        this.scheduler.addRandomTask();
+      }
       this.changed = true;
     }
     else if (input == "q") {

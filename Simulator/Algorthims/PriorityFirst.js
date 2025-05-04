@@ -3,8 +3,8 @@ import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 class PriorityFirst  extends SchedulerAlgorithms {
     constructor() {
         super();
-        this.tasks = [];
         this.name = "Priority First";
+        this.shortName = "Priority";
     }
 
     sortTasks(tasks, t) {

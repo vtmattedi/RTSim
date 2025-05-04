@@ -65,6 +65,9 @@ class AlgoFactory {
         }
         throw new Error(`Unknown algorithm type: ${type}`);
     }
+    static getDescription(type) {
+        return this.createAlgorithm(type).description;
+    }
 }
 
 export {AlgoFactory, AlgorithmModels};

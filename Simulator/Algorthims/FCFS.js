@@ -3,8 +3,9 @@ import { SchedulerAlgorithms } from "./SchedulerAlgorithm.js";
 class FCFSAlgorithm  extends SchedulerAlgorithms {
     constructor() {
         super();
-        this.tasks = [];
-        this.name = "First Come First Served (FCFS)";
+        this.name = "First Come First Served";
+        this.shortName = "FCFS";
+        this.description = "Tasks are sorted based on their arrival time (earliest first).";
     }
 
     sortTasks(tasks, t) {

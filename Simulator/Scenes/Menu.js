@@ -19,7 +19,7 @@ class MainMenu extends Scene {
             { text: "Task Manager", response: SceneAlias.taskManager },
             { text: "Settings",response: SceneAlias.systemMenu },
             { text: "Help", response: "-1" },
-            { text: "Info", response: "-1" },
+            { text: "Info", response:  SceneAlias.infoScreen },
             { text: "Exit", response: "Exit" }
         ]
     }
