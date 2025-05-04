@@ -5,7 +5,6 @@ const CH = new BasicConsole();
 import Assets from '../Engine/Assets/Assets.js';
 import SceneAlias from './Alias.js';
 import { Arrows } from '../Engine/Symbols.js';
-import readline from 'readline-sync';
 import { getFiGlet, mergeChars, mergeFiGlet } from '../Engine/Assets/Fonts.js';
 const sprites = {
   normal: [" \n/", "_\n ", "_\n ", "_\n ", " \n\\", " \n_", " \n_", " \n_"],
