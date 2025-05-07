@@ -6,6 +6,7 @@ import fs from 'fs';
 import { Task } from './Simulator/Scheduler/Scheduler.js';
 import { MsgBoxHandler } from './Simulator/Engine/messageBox.js';
 import SceneAlias from './Simulator/Scenes/Alias.js';
+
 //Create the simulator instance and the console instance
 const sim = new Simulator();
 //Basic Console configs
@@ -15,7 +16,13 @@ CH.show_cursor(false);
 CH.clear_screen();
 //Grab events from the console and set the console to raw mode
 process.stdin.setRawMode(true);
-readline.emitKeypressEvents(process.stdin);
+const rl = readline.createInterface({
+    input: process.stdin,
+    escapeCodeTimeout: 1,
+});
+readline.emitKeypressEvents(process.stdin, rl);
+// readline.emitKeypressEvents(process.stdin);
+
 //start the simulator
 sim.start();
 
@@ -106,6 +113,9 @@ sim.setupExit(
         process.exit(0);
     }
 )
+
+
+
 
 //Configure events for the simulator
 process.stdout.on('resize', () => {

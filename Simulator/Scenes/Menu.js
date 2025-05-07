@@ -54,7 +54,7 @@ class MainMenu extends Scene {
     }
     handleInput(input, modifiers) {
         if (input == "esc") {
-            return "back"
+            return SceneAlias.wecome
         }
         
         if (input == "arrowup") {

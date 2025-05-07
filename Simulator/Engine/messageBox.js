@@ -148,6 +148,47 @@ class MsgBoxHandler {
         this.select = -1;
         this.open = false;
         this.onSelect = null;
+        this.queue = [];
+        this.useAnimation = true;
+        this.animation = null;
+        this.animation_ms = 20;
+        this.animIndex = 0;
+        this.state = 0;// 0 - closed, 1 - opening, 2 - open, 3 - closing
+        this.setAnimation(true);
+    }
+
+    setAnimation(val)
+    {
+        if (val && !this.animation) {
+            this.animation = setInterval(() => {
+                if (this.state == 0)
+                    return;
+                if (this.state == 1) {
+                    this.animIndex += 1;
+                    if (this.animIndex >= 30) {
+                        this.state = 2;
+                        this.animIndex = 0;
+                    }
+                }
+                else if (this.state == 2) {
+                }
+                else if (this.state == 3) {
+                    this.animIndex -= 1;
+                    if (this.animIndex <= 0) {
+                        this.state = 0;
+                        this.animIndex = 0;
+                        this.open = false;
+                        if (typeof this.onSelect === "function") {
+                            this.onSelect(this.select);
+                        }
+                    }
+                }
+            }, 5);
+        }
+        else if (!val && this.animation) {
+            clearInterval(this.animation);
+            this.animation = null;
+        }
     }
     /**
      * Handles user input for navigating and selecting options in a message box.
@@ -175,12 +216,18 @@ class MsgBoxHandler {
             if (this.select >= this.options.length) {
                 this.select = 0;
             }
-        } else if (input === 0 && this.select >= 0) {
-            this.open = false;
-            if (typeof this.onSelect === "function") {
-                this.onSelect(this.select);
-                this.select = 0;
+        } else if (input === 0 && this.select >= 0 ) {
+            if (this.useAnimation){
+                if (this.state == 2) {
+                    this.state = 3;
+                    this.animIndex = 15;
+                }
+                return;
             }
+            if (typeof this.onSelect === "function") {    
+                this.onSelect(this.select);
+            }
+            this.open = false;
         }
 
     }
@@ -203,6 +250,8 @@ class MsgBoxHandler {
         this.options = options;
         this.onSelect = onSelect;
         this.open = true;
+        this.state = 1;
+        this.animIndex = 0;
 
     }
     /**
@@ -211,8 +260,40 @@ class MsgBoxHandler {
      * @returns {{text: string, pos: {x:number, y:number}}} An object containing the selected text and its position.
      */
     getText() {
-        const { text, pos } = msgbox(this.text, this.title, this.options, this.select);
-        return { text, pos };
+        let { text, pos } = msgbox(this.text, this.title, this.options, this.select);
+
+        if (this.useAnimation) {
+
+            text = text.split("\n");
+            const len = text.length - 1;
+            const mid = Math.round(len / 2);
+            const dist = Math.floor(len * this.animIndex / 30);
+            
+            text = text.map((line, index) => {
+                const pos = Math.abs(index - mid); // pos relative to the middle of the box
+                if (index === 0 || index === len || this.state == 2) {
+                    return line;
+                }
+                if (this.state== 1 && pos <= dist) {
+                    return line;
+                }
+                else if (this.state == 3 && dist >= pos) {
+                    return line;
+                }
+                else 
+                    return ""
+            }).filter(a => a!="").join("\n");
+
+            let new_pos = CH.getSize(text);
+            new_pos = {
+                x: pos.x,
+                y: Math.round(pos.y + (len - new_pos.height) / 2)
+            }
+            pos = new_pos; 
+        }
+       
+
+        return { text, pos};
     }
 }
 

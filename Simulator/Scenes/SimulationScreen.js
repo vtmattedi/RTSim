@@ -257,7 +257,7 @@ class SimulationScreen extends Scene {
       }
       this.changed = true;
     }
-    else if (input == "q") {
+    else if (input == "q" || input == "esc") {
       const oldplay = this.timer !== null;
       this.play(false);
       MsgBoxHandler.getInstance().raise(

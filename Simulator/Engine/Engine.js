@@ -142,8 +142,7 @@ class ConsoleEngine {
         if (!(scene instanceof Scene)) {
             throw new Error("Scene must be an instance of Scene");
         }
-        if (alias === "Exit")
-        {
+        if (alias === "Exit") {
             throw new Error("Scene must not be named Exit, this is reserved.");
         }
 
@@ -163,15 +162,14 @@ class ConsoleEngine {
      */
     goToScene(alias, whoiam) {
         //this.lastAlias = alias + " by " + whoiam ;
-        if (alias == "Exit" && this.onExit) 
-        {
-            this.msgBox.raise("Are you sure you want to exit?","Exit", ["Yes", "No"],
+        if (alias == "Exit" && this.onExit) {
+            this.msgBox.raise("Are you sure you want to exit?", "Exit", ["Yes", "No"],
                 (res) => {
                     if (res == 0) {
                         this.onExit();
                     }
                 });
-                return true;
+            return true;
         }
 
         if (alias === -1 || alias === "back") {
@@ -182,7 +180,7 @@ class ConsoleEngine {
             }
             return true;
         }
-        
+
 
         const scene = this.scenes.find((s) => s.alias === alias);
         if (scene) {
@@ -191,7 +189,7 @@ class ConsoleEngine {
             if (this.sceneHistory.length > 1 && this.sceneHistory[1].alias == scene.alias) {
                 this.sceneHistory.splice(1, 1);
             }
-            this.sceneHistory.unshift({...scene, added: whoiam});
+            this.sceneHistory.unshift({ ...scene, added: whoiam });
             scene.scene.onEnter();
             return true;
         }
@@ -293,8 +291,9 @@ class ConsoleEngine {
     }
 
     handleInput(input, modifiers) {
+        
         if (this.debug) {
-        this.#lastInput = `${input} [s:${modifiers.shift?1:0}, c: ${modifiers.ctrl? 1 : 0}, a:${modifiers.alt? 1 : 0}]`;
+            this.#lastInput = `${input} [s:${modifiers.shift ? 1 : 0}, c: ${modifiers.ctrl ? 1 : 0}, a:${modifiers.alt ? 1 : 0}]`;
         }
         if (input == "d" && modifiers.ctrl) {
             this.toggleDebug();
@@ -315,8 +314,8 @@ class ConsoleEngine {
             }
         }
         else {
-           const res =  this.currentScene()?.handleInput(input, modifiers);
-           if (typeof res == "string" || res == -1) {
+            const res = this.currentScene()?.handleInput(input, modifiers);
+            if (typeof res == "string" || res == -1) {
                 const went = this.goToScene(res);
                 if (went) {
                     this.draw();
@@ -342,11 +341,9 @@ class ConsoleEngine {
      */
     draw(force = false) {
         //if the scene is finished and has a navigate property, go to the next scene.
-        if (this.currentScene()?.finished.value)
-        {
+        if (this.currentScene()?.finished.value) {
             if (this.currentScene().finished.navigate) {
-                if (this.goToScene(this.currentScene().finished?.navigate))
-                {
+                if (this.goToScene(this.currentScene().finished?.navigate)) {
                     this.draw(true);
                 }
                 return;
@@ -356,30 +353,30 @@ class ConsoleEngine {
         if (this.locked && !force) {
             return;
         }
-        if (this.scenes.length == 0) {
-            CH.clear_screen();
-            CH.write("No scenes to draw.");
-            return;
-        }
-        //If this line is not commented, the screen will be redraw every frame.
+        //if this is not commented, the screen will be redraw every frame.
         //if this is commented, the screen will be redraw only if the scene is changed.
         //this.currentScene().changed = false; // Reset the changed flag for the current scene
         let text = this.currentScene()?.draw() || "";
         const size = CH.getSize(text); // Get the size of the text to be drawn
         CH.home_cursor();
         //console.log("Size: ", size, CH.getWidth(), CH.getHeight(), this.debug * 4);
+        let debugHSize = 0;
         if (this.debug) {
             this.performaceCheck.addTime(Date.now() - this.lastFrame);
-            let debugText = "Debug: " + this.scenes.length + " scenes loaded [" + this.sceneHistory[0].alias + "]";
-            debugText += ` w:${size.width}, h:${size.height} d:${(CH.getHeight() - this.debug * 4) - size.height}` +"\n";
-            debugText += "Console: " + CH.getWidth() + "x" + CH.getHeight() + " " + delta + `t: ${Date.now() - this.lastFrame}` + " camera: " + this.#camera_pos.x + "," + this.#camera_pos.y + " " + this.#lastInput+ "\n";
+            let debugText = "Debug: " + this.scenes.length + " scenes loaded [" + this.sceneHistory[0]?.alias + "]";
+            debugText += ` w:${size.width}, h:${size.height} d:${(CH.getHeight() - this.debug * 4) - size.height}` + "\n";
+            debugText += "Console: " + CH.getWidth() + "x" + CH.getHeight() + " " + delta + `t: ${Date.now() - this.lastFrame}` + " camera: " + this.#camera_pos.x + "," + this.#camera_pos.y + " " + this.#lastInput + "\n";
             const ms = Math.round(1000 / this.#tagetFPS);
-            debugText += `Target: ${this.#tagetFPS}, MS: ${ms} ` + this.performaceCheck.fps() + "\n";
+            debugText += `Target: ${this.#tagetFPS}, MS: ${ms} ` + this.performaceCheck.fps();
+            debugText += `\n ${this.msgBox.animation} , ${this.msgBox.open} , ${this.msgBox.state}, ${this.msgBox.animIndex}`;
             CH.write(CH.hcenter(debugText, CH.getWidth(), " ", "left"));
+            debugHSize = CH.getSize(debugText).height;
         }
-        else {
+        if (this.scenes.length == 0) {
+            CH.write(CH.hcenter("\x1b[3mNo scenes to draw.\x1b[0m"));
+            return;
         }
-
+        
         //Simple camera system, only moves the text around.
         //The camera position is set to the top left corner of the frame.
         const getPos = (size, camera) => {
@@ -419,13 +416,13 @@ class ConsoleEngine {
                 line = CH.getSafeSubstring(line, pos.start_x, pos.start_x + CH.getWidth() - 1);
                 //console.log(oldSize, midSize, CH.getLineWidth(line),  pos.start_x, CH.getWidth()-1, pos.start_x + CH.getWidth()-1);
                 return line = CH.hcenter(line, CH.getWidth(), " ", "left");
-            }).slice(pos.start_y, pos.start_y + CH.getHeight() - this.debug * 5).join("\n")
+            }).slice(pos.start_y, pos.start_y + CH.getHeight() - this.debug * (debugHSize + 1)).join("\n")
 
 
             const adjusted_size = CH.getSize(text);
 
             // Fill the screen with spaces vertically
-            const delta = (CH.getHeight() - this.debug * 5) - adjusted_size.height;
+            const delta = (CH.getHeight() - this.debug * (debugHSize + 1)) - adjusted_size.height;
             for (let i = 0; i < delta; i++) {
                 text += "\n" + " ".repeat(CH.getWidth());
             }
@@ -436,10 +433,9 @@ class ConsoleEngine {
                 const msgBoxLines = msgBox.text.split("\n");
                 const msgBoxLength = CH.getSize(msgBox.text);
                 text = text.split("\n").map((line, index) => {
-                    if (index >= msgBox.pos.y && index < msgBox.pos.y + msgBoxLength.height) 
-                    {
+                    if (index >= msgBox.pos.y && index < msgBox.pos.y + msgBoxLength.height) {
                         msgBoxLines[index - msgBox.pos.y].length;
-                        line = CH.getSafeSubstring(line,0, msgBox.pos.x - 1) + msgBoxLines[index - msgBox.pos.y] + CH.getSafeSubstring(line, msgBox.pos.x + msgBoxLength.width, CH.getWidth());
+                        line = CH.getSafeSubstring(line, 0, msgBox.pos.x - 1) + msgBoxLines[index - msgBox.pos.y] + CH.getSafeSubstring(line, msgBox.pos.x + msgBoxLength.width, CH.getWidth());
                     }
                     return line;
                 }).join("\n");
@@ -448,7 +444,7 @@ class ConsoleEngine {
             //print the frame
             CH.write(text);
         }
-        
+
 
         this.lastFrame = Date.now();
     }

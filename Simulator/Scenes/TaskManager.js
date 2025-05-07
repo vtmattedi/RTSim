@@ -95,6 +95,13 @@ class TaskScreen extends Scene {
 
     }
     handleInput(input, modifiers) {
+        if (input == "esc") {
+            if (this.editingTask) {
+                this.editingTask = false;
+                return;
+            }
+            return "-1"
+        }
         if (input == "enter" || input == "space") {
             if (!this.editingTask && this.rowIndex >= 0) {
                 this.editingTask = !this.editingTask;
