@@ -4,7 +4,8 @@
   "description": "Real Time Scheduler Simulator",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
   },
   "type": "module",
   "repository": {
@@ -12,9 +13,9 @@
     "url": "github.com/vtmattedi/RTSim"
   },
   "keywords": [
-    "console",
-    "adventure",
-    "game"
+    "Real Time",
+    "Scheduler",
+    "Simulation"
   ],
   "author": "Vitor Mattedi",
   "license": "MIT",

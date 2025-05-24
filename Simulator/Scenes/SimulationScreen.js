@@ -3,14 +3,14 @@ import { BasicConsole, Decorations, DefaultColors } from '../Engine/ConsoleHelp.
 import { genProcessorsFrame, genTaskTable } from '../Scheduler/FramesHelper.js';
 import { Arrows, delta, enter } from '../Engine/Symbols.js';
 import { MsgBoxHandler } from '../Engine/messageBox.js';
-const Colors = DefaultColors;
-const CH = new BasicConsole();
 import Assets from '../Engine/Assets/Assets.js';
 import SceneAlias from './Alias.js';
 import { Scheduler } from '../Scheduler/Scheduler.js';
+const Colors = DefaultColors;
+const CH = new BasicConsole();
 
 const slots = [
-  { name: "TASKS", width: 9, getValue: (task) => CH.hcenter("ID: " + CH.insert_color(task.format?.color, "" + task.id), 9, " ", 1) },
+  { name: "TASKS", width: 9, getValue: (task) => {return CH.hcenter("ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + task.id), 9, " ", 1) }},
   { name: "REM", width: 5, getValue: (task) => "" + task.remainingTime },
   { name: "BURST", width: 5, getValue: (task) => "" + task.burstTime },
   { name: "ARR", width: 5, getValue: (task) => "" + task.arrivalTime },
@@ -107,7 +107,7 @@ class SimulationScreen extends Scene {
     const live = "[\x1b[32mLIVE\x1b[0m]";
     const auto = "-[\x1b[33mAUTO\x1b[0m]-";
     const manual = "[\x1b[31mMANUAL\x1b[0m]";
-    text += "\n";
+    text += "\n\n";
     let line = delta + "t = " + CH.hcenter("" + this.snapHistory[this.currentIndex].t, 7, "-", "left");
     line += this.currentIndex == this.snapHistory.length - 1 ? live : "-".repeat(6);
     line += this.timer ? auto : manual;
@@ -146,7 +146,10 @@ class SimulationScreen extends Scene {
       const t_size = CH.getSize(t);
       tasksSpr = CH.merge(tasksSpr, CH.hcenter(t, t_size.width), { padding: 4 })
     }
-
+    if (this.getTasks(this.currentTaskIndex).length > Infinity) {
+      console.log(this.getTasks(this.currentTaskIndex), this.getTasks(this.currentTaskIndex)[0].color);
+      process.exit();
+    }
     const stats = []
     const length = this.snapHistory[this.currentIndex].tasks.length;
     stats.push ("+"+ CH.hcenter("TASKS: " + length, 16, "-") + "+")

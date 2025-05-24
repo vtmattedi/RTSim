@@ -1,15 +1,16 @@
 import { Scene } from '../Engine/Scenes.js';
 import { BasicConsole, Decorations, DefaultColors } from '../Engine/ConsoleHelp.js';
 import { formatText, genProcessorsFrame, genTaskTable } from '../Scheduler/FramesHelper.js';
-const Colors = DefaultColors;
-const CH = new BasicConsole();
 import Assets from '../Engine/Assets/Assets.js';
 import { Arrows } from '../Engine/Symbols.js';
-import { Scheduler } from '../Scheduler/Scheduler.js';
+import { Task } from '../Scheduler/Scheduler.js';
 import SceneAlias from './Alias.js';
+const Colors = DefaultColors;
+const CH = new BasicConsole();
 
 const slots = [
-    { name: "TASKS", width: 9, getValue: (task, index) => { return "ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + task.id); } },
+    { name: "TASKS", width: 9, getValue: (task, index) => { return "ID: " + CH.insert_color(Colors.custom_colors(task.color), "TBD"); } },
+    { name: "ARRI", width: 6, getValue: (task, index) => { return "" + task.arrivalTime; } },
     { name: "BURST", width: 5, getValue: (task, index) => { return "" + task.burstTime; } },
     { name: "DEAD", width: 6, getValue: (task, index) => { return task.deadline ? "" + (task.arrivalTime + task.deadline) : "---"; } },
     { name: "PRIO", width: 6, getValue: (task, index) => { return "" + task.priority; } },
@@ -50,17 +51,21 @@ class TaskScreen extends Scene {
 
     draw() {
         let text = CH.getFigLet(`Task${CH.getWidth() < 70 ? "\n" : " "}Manager`);
-        text += "\n";
+        text += "\n\n";
         text += CH.hcenter("System-Config", CH.getWidth(), "-") + "\n";
+        
         let configs = ["Processors: " + this.scheduler.numProcessors, "Algorithm: " + this.scheduler.model.name, "Time Quantum: " + this.scheduler.timeQuantum, "Time Slice: " + this.scheduler.timeSlice];
         text += "|" + CH.hcenter(configs.map((config) => {
             return CH.hcenter(config, Math.floor(CH.getWidth() / config.length) - 1, " ");
         }).join(" "), CH.getWidth() - 2) + "|\n";
+        
         let nav = ["Back", "System Config", "Start Simulation"];
         text += "|" + CH.hcenter(nav.map((nav, index) => {
             return CH.hcenter(formatText(nav, this.rowIndex == -2 && this.optionsIndex == index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
         }).join(" "), CH.getWidth() - 2) + "|\n";
+        
         text += "-".repeat(CH.getWidth()) + "\n";
+        
         const inputs = [
             {
                 value: `(${Arrows.up})A`,
@@ -83,8 +88,7 @@ class TaskScreen extends Scene {
             }
         }
         text += "\n";
-
-        text += CH.hcenter(genTaskTable(this.scheduler.tasks, slots, CH.getHeight() - 19, {
+        text += CH.hcenter(genTaskTable(this.scheduler.startingTasks, slots, CH.getHeight() - 19, {
             col: this.editingTask ? this.colIndex + 1 : -1,
             row: this.rowIndex,
         }, "Task List Editor"));
@@ -120,7 +124,18 @@ class TaskScreen extends Scene {
         }
         if (input == "a") {
             for (let i = 0; i < 1 + 9 * modifiers.shift; i++) {
-                this.scheduler.addRandomTask();
+                const task = new Task(Math.round(Math.random() * 10 + 1), Math.round(Math.random() * 10 + 1), Math.random() > 0.5 ? null : Math.round(Math.random() * 10 + 1)); // Random burstTime between 1 and 10
+                if (Math.random() > 0.5) {
+                    task.pinToCore = Math.floor(Math.random() * this.scheduler.numProcessors); // Random core to pin to
+                }
+                task.setFormat({
+                    color: DefaultColors.custom_colors(Math.round(Math.random() * 255)),
+                    background: DefaultColors.custom_colors(Math.round(Math.random() * 255, true)),
+                    char: Math.random() > 0.5 ? '*' : '#',
+                });
+                task.color = Math.round(Math.random() * 255);
+                task.arrivalTime = 0;
+                this.scheduler.startingTasks.push(task);
             }
         }
         if (input == "e") {

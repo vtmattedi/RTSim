@@ -1,11 +1,11 @@
 import { Scene } from '../Engine/Scenes.js';
 import { BasicConsole, Decorations, DefaultColors } from '../Engine/ConsoleHelp.js';
-const Colors = DefaultColors;
-const CH = new BasicConsole();
 import Assets from '../Engine/Assets/Assets.js';
 import SceneAlias from './Alias.js';
 import { Arrows } from '../Engine/Symbols.js';
 import { getFiGlet, mergeChars, mergeFiGlet } from '../Engine/Assets/Fonts.js';
+const Colors = DefaultColors;
+const CH = new BasicConsole();
 const sprites = {
   normal: [" \n/", "_\n ", "_\n ", "_\n ", " \n\\", " \n_", " \n_", " \n_"],
   back: [" \n/", " \n_", " \n_", " \n_", " \n\\", "_\n ", "_\n ", "_\n "]

@@ -218,7 +218,7 @@ const genProcessorsFrame = (history, currentIndex) => {
         { name: "Processor-(#N)", width: 16, getValue: (task, i) => "Core #" + i },
         {
             name: "TASK", width: 8, getValue: (task) => {
-                let txt = task ? "ID: " + CH.insert_color(task.format.color, "" + task.id) : CH.insert_color(Colors.LIGHTBLACK_EX, "IDLE");
+                let txt = task ? "ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + task.id) : CH.insert_color(Colors.LIGHTBLACK_EX, "IDLE");
                 return CH.hcenter(txt, 8, " ", task ? 1 : 0);
 
             }

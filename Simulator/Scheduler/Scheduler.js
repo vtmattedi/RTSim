@@ -64,11 +64,6 @@ class Task {
         this.status = "CREATED"; // ready, running, completed
         this.color = 0;// 8bit number for ANSI color using COLOR.custom_colors()
         this.period = null; // 0 or null if no periodicity
-        this.format = {
-            color: DefaultColors.RED,
-            background: null,
-            char: '*',
-        }
     }
 
     /**
@@ -148,11 +143,10 @@ class Task {
      * @returns {string} - The generated line representation of the task.
      */
     static getLine(task, size = 1) {
-        let line = task.format.char.repeat(size);
+        let line = "";//task.format.char.repeat(size);
         line = " ".repeat(size);
-        if (task.format.color) {
-            line = CH.insert_color(task.format.color.replace("38", "48"), line);
-        }
+        line = CH.insert_color(DefaultColors.custom_colors(task.color? task.color: 255,true), line);
+
         // console.log(line)
         // console.log(task.format.color.replace("38","48"), line.replace(" ", "+").replace(ControlSequences.CSI, "ESC"));
         // throw new Error("Debugging");
@@ -162,12 +156,29 @@ class Task {
         return line;
 
     }
+
+    /**
+     * Creates a new Task instance based on the provided task.
+     *
+     * @param {Task} task - The task to clone. Must be an instance of the Task class.
+     * @returns {Task|null} A new Task instance with the same properties as the input task,
+     *                      or null if the input is not an instance of Task.
+     */
+    static fromTask(task) {
+        if (!(task instanceof Task))
+            return null;
+
+        let newTask = new Task(task.burstTime, task.priority, task.deadline, task.pinToCore);
+        newTask.color = task.color;
+        return newTask;
+    }
 }
 
 class Scheduler {
     #taskIDs = 0;
     constructor() {
         this.numProcessors = 1;
+        this.startingTasks = [];
         this.tasks = [];
         this.currentTasks = Array(1);
         this.lastValidTasks = [];
@@ -179,22 +190,17 @@ class Scheduler {
             console.log("config: ", config);
             throw new Error("Invalid configuration object");
         }
-        const getValue = (name, defaultValue)=>{
+        const getValue = (name, defaultValue) => {
             const value = config.find(item => item.name === name)?.value;
             return value !== undefined ? value : defaultValue;
         }
         this.numProcessors = getValue("Processors", 1); // number of processors
         this.currentTasks = Array(this.numProcessors);
         this.lastValidTasks = [];
-        this.model = AlgoFactory.createAlgorithm(getValue("Scheduler Algorithm", AlgorithmModels.FCFS), { timeQuantum: getValue("Time Quantum", 1)}); // Default algorithm
+        this.model = AlgoFactory.createAlgorithm(getValue("Scheduler Algorithm", AlgorithmModels.FCFS), { timeQuantum: getValue("Time Quantum", 1) }); // Default algorithm
         this.t = 0;
         //Reset all the tasks
-        this.tasks=this.tasks.filter((t) => t.arrivalTime === 0)
-        for(const task of this.tasks) {
-            Task.resetTimers(task); // reset the task timers if it already exists
-            task.arrivalTime = this.t;
-            task.status = TaskStates.ready;
-        }
+        this.tasks = [];
     }
     addTask(task) {
         if (task instanceof Task === false) {
@@ -217,11 +223,6 @@ class Scheduler {
         if (Math.random() > 0.5) {
             task.pinToCore = Math.floor(Math.random() * this.numProcessors); // Random core to pin to
         }
-        task.setFormat({
-            color: DefaultColors.custom_colors(Math.round(Math.random() * 255)),
-            background: DefaultColors.custom_colors(Math.round(Math.random() * 255, true)),
-            char: Math.random() > 0.5 ? '*' : '#',
-        });
         task.color = Math.round(Math.random() * 255);
         this.addTask(task);
     }
@@ -252,6 +253,16 @@ class Scheduler {
             }
         }
         );
+
+        // Add new tasks to the system
+        for (const task of this.startingTasks) {
+            if (task.arrivalTime == this.t) {
+                const newTask = Task.fromTask(task)
+                if (newTask)
+                    this.addTask(newTask);
+            };
+        }
+
         const validtasks = this.model.sortTasks(this.tasks.filter(task => task.status === TaskStates.ready));
         this.lastValidTasks = validtasks;
         this.currentTasks = Array(this.numProcessors).fill(null);

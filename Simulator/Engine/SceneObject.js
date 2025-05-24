@@ -11,9 +11,10 @@
 * A value of -2 in the x position means that the object will be drawn at the start of the line. (CH.merge(object.getValue(), currentFrame)
 */
 import { BasicConsole } from "./ConsoleHelp.js";
+import fs from 'fs';
 const CH = new BasicConsole();
 class SceneObject {
-    constructor(pos, getValue,) {
+    constructor(pos, getValue) {
         if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number' || typeof pos.z !== 'number') {
             throw new Error("pos must have numeric x, y, and z properties");
         }
@@ -22,6 +23,19 @@ class SceneObject {
         }
         this.pos = pos;
         this.getValue = getValue;
+        this.size = CH.getSize(getValue());
+        this.rotation = 0;
+    }
+    // rotate the object in 2D in 90 or -90 degrees
+    rotate() {
+        this.rotation = (this.rotation + 1) % 4;
+    }
+    draw() {
+        let text = this.getValue(this.rotation);
+        // for (let i = 0; i < this.rotation; i++) {
+        //     text = CH.safeTranslate(text);
+        // }
+        return text;
     }
 }
 
