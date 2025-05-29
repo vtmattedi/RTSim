@@ -921,46 +921,46 @@ const getChar = (char) => {
         return smallFiGlet[code - 97 + 49];
     }
     
-    else if (char == ':') {
+    else if (char === ':') {
         return smallFiGlet[10];
     }
-    else if (char == ';') {
+    else if (char === ';') {
         return smallFiGlet[11];
     }
-    else if (char == '(') {
+    else if (char === '(') {
         return smallFiGlet[12];
     }
-    else if (char == ')') {
+    else if (char === ')') {
         return smallFiGlet[14];
     }
-    else if (char == '?') {
+    else if (char === '?') {
         return smallFiGlet[15];
     }
-    else if (char == '@') {
+    else if (char === '@') {
         return smallFiGlet[16];
     }
-    else if (char == '[') {
+    else if (char === '[') {
         return smallFiGlet[43];
     }
-    else if (char == '\\') {
+    else if (char === '\\') {
         return smallFiGlet[44];
     }
-    else if (char == ']') {
+    else if (char === ']') {
         return smallFiGlet[45];
     }
-    else if (char == '^') {
+    else if (char === '^') {
         return smallFiGlet[46];
     }
-    else if (char == '.') {
+    else if (char === '.') {
         return smallFiGlet[47];
     }
-    else if (char == ',') {
+    else if (char === ',') {
         return smallFiGlet[48];
     }
-    else if (char == '!') {
+    else if (char === '!') {
         return smallFiGlet[76];
     }
-    else if (char == ' ') {
+    else if (char === ' ') {
         return smallFiGlet[75];
     }
     else {
@@ -993,10 +993,10 @@ const mergeChars = (char1, char2) => {
     const merged = [];
     const height = Math.max(char1.length, char2.length);
 
-    if (char1.length == 0) {
+    if (char1.length === 0) {
         return char2;
     }
-    if (char2.length == 0) {
+    if (char2.length === 0) {
         return char1;
     }
     if (char1.length < height)
@@ -1048,7 +1048,7 @@ const getFiGlet = (str) => {
     let merged = [[]];
     let currentLine = 0;
     for (let i = 0; i < chars.length; i++) {
-        if (chars[i] == '\n') {
+        if (chars[i] === '\n') {
             currentLine++;
             merged[currentLine] = [];
             continue;

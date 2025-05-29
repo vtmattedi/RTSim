@@ -161,18 +161,18 @@ class MsgBoxHandler {
     {
         if (val && !this.animation) {
             this.animation = setInterval(() => {
-                if (this.state == 0)
+                if (this.state === 0)
                     return;
-                if (this.state == 1) {
+                if (this.state === 1) {
                     this.animIndex += 1;
                     if (this.animIndex >= 30) {
                         this.state = 2;
                         this.animIndex = 0;
                     }
                 }
-                else if (this.state == 2) {
+                else if (this.state === 2) {
                 }
-                else if (this.state == 3) {
+                else if (this.state === 3) {
                     this.animIndex -= 1;
                     if (this.animIndex <= 0) {
                         this.state = 0;
@@ -218,7 +218,7 @@ class MsgBoxHandler {
             }
         } else if (input === 0 && this.select >= 0 ) {
             if (this.useAnimation){
-                if (this.state == 2) {
+                if (this.state === 2) {
                     this.state = 3;
                     this.animIndex = 15;
                 }
@@ -244,7 +244,7 @@ class MsgBoxHandler {
         this.text = text;
         this.title = title;
         this.select = 0;
-        if (options.length == 0) {
+        if (options.length === 0) {
             options = ["OK"];
         }
         this.options = options;
@@ -271,13 +271,13 @@ class MsgBoxHandler {
             
             text = text.map((line, index) => {
                 const pos = Math.abs(index - mid); // pos relative to the middle of the box
-                if (index === 0 || index === len || this.state == 2) {
+                if (index === 0 || index === len || this.state === 2) {
                     return line;
                 }
                 if (this.state== 1 && pos <= dist) {
                     return line;
                 }
-                else if (this.state == 3 && dist >= pos) {
+                else if (this.state === 3 && dist >= pos) {
                     return line;
                 }
                 else 

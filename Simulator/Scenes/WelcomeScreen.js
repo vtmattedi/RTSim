@@ -45,7 +45,7 @@ class welcomeScreen extends Scene {
     let titleText = "";
 
     for (let i = 0; i < title.length; i++) {
-      if (title[i] == "\n") {
+      if (title[i] === "\n") {
         text += CH.hcenter(titleText) + "\n";
         titleText = "";
         continue;
@@ -78,7 +78,7 @@ class welcomeScreen extends Scene {
       [{ text: "Space", format: { color: Colors.custom_colors(39), decoration: Decorations.Bold } }]
     );
     text = CH.hcenter(text);
-    if (this.timer == null) {
+    if (this.timer === null) {
       return text;
     }
     text += "\n".repeat(8);
@@ -135,7 +135,7 @@ class welcomeScreen extends Scene {
 
   }
   handleInput(input) {
-    if (input == "enter" || input == "space") {
+    if (input === "enter" || input === "space") {
       return SceneAlias.mainMenu;
     }
   }

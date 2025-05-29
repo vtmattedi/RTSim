@@ -38,7 +38,7 @@ class SimulationScreen extends Scene {
     this.scheduler = scheduler;
     this.snapHistory = [];
     this.timer = null;
-    this.chanceOfNewTask = config.find(o => o.name == "Chance of new task")?.value * 0.1 || 0.5;
+    this.chanceOfNewTask = config.find(o => o.name === "Chance of new task")?.value * 0.1 || 0.5;
     this.currentIndex = 0;
     this.selTaskIndex = -2;
     this.currentTaskIndex = 0;
@@ -50,7 +50,7 @@ class SimulationScreen extends Scene {
     delete this.snapHistory;
     this.snapHistory = []
     this.snapHistory.push(this.scheduler.getSnapshot());
-    this.chanceOfNewTask = this.config.find(o => o.name == "Chance of new task")?.value * 0.1 || 0;
+    this.chanceOfNewTask = this.config.find(o => o.name === "Chance of new task")?.value * 0.1 || 0;
     this.currentIndex = 0;
     this.selTaskIndex = -2;
     this.currentTaskIndex = 0;
@@ -109,7 +109,7 @@ class SimulationScreen extends Scene {
     const manual = "[\x1b[31mMANUAL\x1b[0m]";
     text += "\n\n";
     let line = delta + "t = " + CH.hcenter("" + this.snapHistory[this.currentIndex].t, 7, "-", "left");
-    line += this.currentIndex == this.snapHistory.length - 1 ? live : "-".repeat(6);
+    line += this.currentIndex === this.snapHistory.length - 1 ? live : "-".repeat(6);
     line += this.timer ? auto : manual;
     line = CH.hcenter("Model: " + this.snapHistory[this.currentIndex].model, CH.getWidth()/4, "-") + line;
     text += CH.hcenter(line, CH.getWidth(), "-") + "\n";
@@ -196,7 +196,7 @@ class SimulationScreen extends Scene {
   }
   handleInput(input, modifiers) {
     //Enter or Space to enter the task selection mode
-    if (input == "enter") {
+    if (input === "enter") {
       if (this.selTaskIndex === -2) {
         this.selTaskIndex = -1;
       } else {
@@ -205,7 +205,7 @@ class SimulationScreen extends Scene {
       }
     }
     //Arrow keys to navigate the task list
-    else if (input == "arrowup") {
+    else if (input === "arrowup") {
       if (this.selTaskIndex > -2) {
         this.selTaskIndex--;
       }
@@ -214,7 +214,7 @@ class SimulationScreen extends Scene {
       else 
         this.trackedTaskId = null;
     }
-    else if (input == "arrowdown") {
+    else if (input === "arrowdown") {
       if (this.selTaskIndex != -2) {
         this.selTaskIndex++;
         if (this.selTaskIndex >= this.getTasks(this.currentTaskIndex).length) {
@@ -223,8 +223,8 @@ class SimulationScreen extends Scene {
         this.trackedTaskId = this.getTasks(this.currentTaskIndex)[this.selTaskIndex]?.id;
       }
     }
-    else if (input == "arrowleft") {
-      if (this.selTaskIndex == -1) {
+    else if (input === "arrowleft") {
+      if (this.selTaskIndex === -1) {
         this.currentTaskIndex--;
         if (this.currentTaskIndex < 0) {
           this.currentTaskIndex = tasksOption.length - 1;
@@ -236,8 +236,8 @@ class SimulationScreen extends Scene {
         this.play(false);
       }
     }
-    else if (input == "arrowright") {
-      if (this.selTaskIndex == -1) {
+    else if (input === "arrowright") {
+      if (this.selTaskIndex === -1) {
         this.currentTaskIndex++;
         if (this.currentTaskIndex >= tasksOption.length) {
           this.currentTaskIndex = 0;
@@ -251,16 +251,16 @@ class SimulationScreen extends Scene {
     }
     // p to pause or play the simulation
     // (automatic advance time)
-    else if (input == "p" || input == "space") {
+    else if (input === "p" || input === "space") {
       this.play(!this.timer);
     }
-    else if (input == "a") {
+    else if (input === "a") {
       for (let i = 0; i < 1 + modifiers.shift * 9; i++) {
         this.scheduler.addRandomTask();
       }
       this.changed = true;
     }
-    else if (input == "q" || input == "esc") {
+    else if (input === "q" || input === "esc") {
       const oldplay = this.timer !== null;
       this.play(false);
       MsgBoxHandler.getInstance().raise(

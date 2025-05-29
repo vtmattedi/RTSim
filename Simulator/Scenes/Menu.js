@@ -46,30 +46,30 @@ class MainMenu extends Scene {
         text += CH.hcenter("Use arrow keys to navigate", CH.getWidth(), " ", 1) + "\n";
         for (let i = 0; i < this.options.length; i++) {
             let line = this.options[i].text;
-            line = formatText(line, i === this.currentIndex, i == this.options.length - 1 || i == 0);
+            line = formatText(line, i === this.currentIndex, i === this.options.length - 1 || i === 0);
             text += CH.hcenter(line, CH.getWidth(), " ", this.alignment) + "\n";
         }
         return text;
 
     }
     handleInput(input, modifiers) {
-        if (input == "esc") {
+        if (input === "esc") {
             return SceneAlias.wecome
         }
         
-        if (input == "arrowup") {
+        if (input === "arrowup") {
             this.currentIndex--;
             if (this.currentIndex < 0) {
                 this.currentIndex = 0;
             }
         }
-        if (input == "arrowdown") {
+        if (input === "arrowdown") {
             this.currentIndex++;
             if (this.currentIndex >= this.options.length) {
                 this.currentIndex = this.options.length - 1;
             }
         }
-        if (input == "enter" || input == "space") {
+        if (input === "enter" || input === "space") {
             return this.options[this.currentIndex].response;
 
         }

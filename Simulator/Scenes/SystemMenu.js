@@ -17,16 +17,16 @@ class SystemMenu extends Scene {
         this.currentIndex = 0;
         this.navIndex = 0;
         this.options = options;
-        this.showTimeQuantum = options.find(o => o.name == "Scheduler Algorithm")?.value === AlgorithmModels.RR;
-        this.timeQuantumIndex = options.findIndex(o => o.name == "Time Quantum");
+        this.showTimeQuantum = options.find(o => o.name === "Scheduler Algorithm")?.value === AlgorithmModels.RR;
+        this.timeQuantumIndex = options.findIndex(o => o.name === "Time Quantum");
 
     }
 
     onEnter() {
         this.currentIndex = 0;
         this.navIndex = 0;
-        this.showTimeQuantum = this.options.find(o => o.name == "Scheduler Algorithm")?.value === AlgorithmModels.RR;
-        this.timeQuantumIndex = this.options.findIndex(o => o.name == "Time Quantum");
+        this.showTimeQuantum = this.options.find(o => o.name === "Scheduler Algorithm")?.value === AlgorithmModels.RR;
+        this.timeQuantumIndex = this.options.findIndex(o => o.name === "Time Quantum");
 
     }
     draw() {
@@ -35,7 +35,7 @@ class SystemMenu extends Scene {
         text += "\n";
         text += "-".repeat(CH.getWidth()) + "\n\n";
         text += CH.hcenter(navOptions.map((option, index) => {
-            return CH.hcenter(formatText(option, (this.navIndex == index) && this.currentIndex == -1, true), Math.floor(CH.getWidth() / option.length) - 4, " ");
+            return CH.hcenter(formatText(option, (this.navIndex === index) && this.currentIndex === -1, true), Math.floor(CH.getWidth() / option.length) - 4, " ");
         }).join(" ")) + "\n";
         
         const cmds = [
@@ -83,7 +83,7 @@ class SystemMenu extends Scene {
 
     }
     handleInput(input, modifiers) {
-        if (input == "arrowleft") {
+        if (input === "arrowleft") {
             if (this.currentIndex < 0) {
                 this.navIndex--;
                 if (this.navIndex < 0) {
@@ -98,13 +98,13 @@ class SystemMenu extends Scene {
             if (option.value < option.min) {
                 option.value = option.max;
             }
-            if (option.name == "Scheduler Algorithm") {
+            if (option.name === "Scheduler Algorithm") {
                 this.showTimeQuantum = option.value === AlgorithmModels.RR;
             }
 
 
         }
-        if (input == "arrowright") {
+        if (input === "arrowright") {
             if (this.currentIndex < 0) {
                 this.navIndex++;
                 if (this.navIndex >= navOptions.length) {
@@ -114,18 +114,18 @@ class SystemMenu extends Scene {
             }
             const option = this.options[this.currentIndex];
             option.value += option.step * (1 + modifiers.shift * 9);;
-            if (option.name == "Chance of a new task") {
+            if (option.name === "Chance of a new task") {
                 option.value = Math.round(option.value * 10) / 10;
             }
             if (option.value > option.max) {
                 option.value = option.min;
             }
-            if (option.name == "Scheduler Algorithm") {
+            if (option.name === "Scheduler Algorithm") {
                 this.showTimeQuantum = option.value === AlgorithmModels.RR;
             }
 
         }
-        if (input == "arrowup") {
+        if (input === "arrowup") {
             this.currentIndex--;
             if (!this.showTimeQuantum && this.currentIndex === this.timeQuantumIndex)
                 this.currentIndex--;
@@ -133,7 +133,7 @@ class SystemMenu extends Scene {
                 this.currentIndex = -1;
             }
         }
-        if (input == "arrowdown") {
+        if (input === "arrowdown") {
             this.currentIndex++;
             if (!this.showTimeQuantum && this.currentIndex === this.timeQuantumIndex)
                 this.currentIndex++;
@@ -141,15 +141,15 @@ class SystemMenu extends Scene {
                 this.currentIndex = this.options.length - 1;
             }
         }
-        if (input == "enter" || input == "space") {
-            if (this.currentIndex == -1) {
-                if (this.navIndex == 0) {
+        if (input === "enter" || input === "space") {
+            if (this.currentIndex === -1) {
+                if (this.navIndex === 0) {
                     return "back";
                 }
-                if (this.navIndex == 1) {
+                if (this.navIndex === 1) {
                     return SceneAlias.taskManager;
                 }
-                if (this.navIndex == 2) {
+                if (this.navIndex === 2) {
                     return SceneAlias.simulationScreen;
                 }
             }

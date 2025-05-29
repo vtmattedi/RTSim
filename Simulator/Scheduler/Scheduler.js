@@ -256,7 +256,7 @@ class Scheduler {
 
         // Add new tasks to the system
         for (const task of this.startingTasks) {
-            if (task.arrivalTime == this.t) {
+            if (task.arrivalTime === this.t) {
                 const newTask = Task.fromTask(task)
                 if (newTask)
                     this.addTask(newTask);

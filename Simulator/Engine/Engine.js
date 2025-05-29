@@ -193,10 +193,10 @@ class ConsoleEngine {
      */
     goToScene(alias, whoiam) {
         //this.lastAlias = alias + " by " + whoiam ;
-        if (alias == "Exit" && this.onExit) {
+        if (alias === "Exit" && this.onExit) {
             this.msgBox.raise("Are you sure you want to exit?", "Exit", ["Yes", "No"],
                 (res) => {
-                    if (res == 0) {
+                    if (res === 0) {
                         this.onExit();
                     }
                 });
@@ -217,7 +217,7 @@ class ConsoleEngine {
         if (scene) {
             this.sceneHistory[0]?.scene.onExit();
             // prevent going back and forth to the same scene
-            if (this.sceneHistory.length > 1 && this.sceneHistory[1].alias == scene.alias) {
+            if (this.sceneHistory.length > 1 && this.sceneHistory[1].alias === scene.alias) {
                 this.sceneHistory.splice(1, 1);
             }
             this.sceneHistory.unshift({ ...scene, added: whoiam });
@@ -326,7 +326,7 @@ class ConsoleEngine {
         if (this.debug) {
             this.#lastInput = `${input} [s:${modifiers.shift ? 1 : 0}, c: ${modifiers.ctrl ? 1 : 0}, a:${modifiers.alt ? 1 : 0}]`;
         }
-        if (input == "d" && modifiers.ctrl) {
+        if (input === "d" && modifiers.ctrl) {
             this.toggleDebug();
         }
 
@@ -334,19 +334,19 @@ class ConsoleEngine {
             return;
         }
         if (this.msgBox.open) {
-            if (input == "enter" || input == "space") {
+            if (input === "enter" || input === "space") {
                 this.msgBox.handleInput(0);
             }
-            else if (input == "arrowleft") {
+            else if (input === "arrowleft") {
                 this.msgBox.handleInput(-1);
             }
-            else if (input == "arrowright") {
+            else if (input === "arrowright") {
                 this.msgBox.handleInput(1);
             }
         }
         else {
             const res = this.currentScene()?.handleInput(input, modifiers);
-            if (typeof res == "string" || res == -1) {
+            if (typeof res === "string" || res === -1) {
                 const went = this.goToScene(res);
                 if (went) {
                     this.draw();
@@ -403,7 +403,7 @@ class ConsoleEngine {
             CH.write(CH.hcenter(debugText, CH.getWidth(), " ", "left"));
             debugHSize = CH.getSize(debugText).height;
         }
-        if (this.scenes.length == 0) {
+        if (this.scenes.length === 0) {
             CH.write(CH.hcenter("\x1b[3mNo scenes to draw.\x1b[0m"));
             return;
         }

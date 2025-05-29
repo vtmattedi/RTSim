@@ -122,7 +122,7 @@ freedom to the galaxy....\n\n\n\n`;
 
     handleInput(input, modifiers) {
         //Enter or Space to enter the task selection mode
-        if (input == "enter" || input == "space" || input == "esc") {
+        if (input === "enter" || input === "space" || input === "esc") {
             return "back";
         }
     }

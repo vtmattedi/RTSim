@@ -49,7 +49,7 @@ fs.writeFileSync('./systemconfig.json', JSON.stringify(sysconfig, null, 2), 'utf
 let silentStart = false;
 if (argv.length > 2) {
     for (let i = 2; i < argv.length; i++) {
-        if (argv[i] == "--help" || argv[i] == "-h") {
+        if (argv[i] === "--help" || argv[i] === "-h") {
             console.log("Scheduler Simulator - Help");
             console.log("Usage: node main.js [options]");
             console.log("Options:");
@@ -58,7 +58,7 @@ if (argv.length > 2) {
             console.log("--version, -v: Show the version of the simulator.");
             process.exit(0);
         }
-        else if (argv[i] == "-f") {
+        else if (argv[i] === "-f") {
             if (argv[i + 1]) {
                 const fileName = argv[i + 1];
                 if (!fileName.endsWith(".json")) {
@@ -93,12 +93,12 @@ if (argv.length > 2) {
                 i++;
             }
         }
-        else if (argv[i] == "--version" || argv[i] == "-v") {
+        else if (argv[i] === "--version" || argv[i] === "-v") {
             console.log("Scheduler Simulator Version: " + sim.Version);
             console.log("Engine Version: " + sim.Engine.Version);
             process.exit(0);
         }
-        else if (argv[i] == "-s" || argv[i] == "-silent") {
+        else if (argv[i] === "-s" || argv[i] === "-silent") {
             silentStart = true;
         }
 

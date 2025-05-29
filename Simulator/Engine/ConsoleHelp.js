@@ -459,7 +459,7 @@ class BasicConsole extends ConsoleImplementation {
         // Align the sprites to match each other's height
         if (options?.align && rightLines.length != leftLines.length)
         {
-           if (options.align == "top")
+           if (options.align === "top")
            {
                 let diff = leftLines.length - rightLines.length;
                 while (diff !== 0)
@@ -474,7 +474,7 @@ class BasicConsole extends ConsoleImplementation {
                     }
                 }
            }
-           else if (options.align == "bottom")
+           else if (options.align === "bottom")
            {
                 let diff = leftLines.length - rightLines.length;
                 while (diff !== 0)
@@ -516,7 +516,7 @@ class BasicConsole extends ConsoleImplementation {
         let mergedLines = leftLines.map((line, index) => {
             const sentenceLine = rightLines[index] || ' '.repeat(maxLengthRight);
             let padding = options.padding || 4;
-            if (options?.padding == 0)
+            if (options?.padding === 0)
                 padding = 0;
             return line.padEnd(maxLengthLeft, ' ') + ' '.repeat(padding) + sentenceLine;
 
@@ -648,27 +648,27 @@ class BasicConsole extends ConsoleImplementation {
         let oldOpenEsc = "";
         for (let i = 0; i < text.length; i++) {
 
-            if (cmd == true) {
-                if (text[i] == 'm') {
+            if (cmd === true) {
+                if (text[i] === 'm') {
                     cmd = false;
                 }
                 oldOpenEsc += text[i];
             }
-            else if (cmd == false) {
-                if (text[i] == '\x1b') {
+            else if (cmd === false) {
+                if (text[i] === '\x1b') {
                     cmd = true;
                     openEsc = !openEsc;
                     oldOpenEsc = text[i];
                 }
                 else {
-                    if (trueIndex == start) {
+                    if (trueIndex === start) {
                         if (openEsc) {
                             recomposeEsc = oldOpenEsc;
                         }
                         startIndex = i;
                        // console.log("b:", startIndex, openEsc, i, text[i]);
                     }
-                    if (trueIndex == end) {
+                    if (trueIndex === end) {
                         endIndex = i;
                         break;
                     }
@@ -679,7 +679,7 @@ class BasicConsole extends ConsoleImplementation {
         // endIndex + 1 to include the last char
         let res = text.substring(startIndex, endIndex + 1);
         // if there is an escape sequence open close it
-        if (openEsc == true || cmd == true) {
+        if (openEsc === true || cmd === true) {
             res += ControlSequences.Reset;
         }
         if (recomposeEsc != "") {
@@ -688,7 +688,7 @@ class BasicConsole extends ConsoleImplementation {
        // console.log("c:", {start, end},{startIndex,endIndex}, trueIndex, cmd, openEsc);
 
         //Debug artifacts
-        // if (end == 75) {
+        // if (end === 75) {
         //     console.log(end, trueIndex, startIndex, endIndex, cmd, openEsc, res.replaceAll(`\x1b`, "ESC"), res);
         //     console.log(res.replaceAll(`\x1b`, "ESC"));
         //     console.log(res);

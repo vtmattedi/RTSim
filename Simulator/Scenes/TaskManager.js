@@ -61,7 +61,7 @@ class TaskScreen extends Scene {
         
         let nav = ["Back", "System Config", "Start Simulation"];
         text += "|" + CH.hcenter(nav.map((nav, index) => {
-            return CH.hcenter(formatText(nav, this.rowIndex == -2 && this.optionsIndex == index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
+            return CH.hcenter(formatText(nav, this.rowIndex === -2 && this.optionsIndex === index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
         }).join(" "), CH.getWidth() - 2) + "|\n";
         
         text += "-".repeat(CH.getWidth()) + "\n";
@@ -99,30 +99,30 @@ class TaskScreen extends Scene {
 
     }
     handleInput(input, modifiers) {
-        if (input == "esc") {
+        if (input === "esc") {
             if (this.editingTask) {
                 this.editingTask = false;
                 return;
             }
             return "-1"
         }
-        if (input == "enter" || input == "space") {
+        if (input === "enter" || input === "space") {
             if (!this.editingTask && this.rowIndex >= 0) {
                 this.editingTask = !this.editingTask;
             }
-            if (this.rowIndex == -2) {
-                if (this.optionsIndex == 0) {
+            if (this.rowIndex === -2) {
+                if (this.optionsIndex === 0) {
                     return -1;
                 }
-                if (this.optionsIndex == 1) {
+                if (this.optionsIndex === 1) {
                     return SceneAlias.systemMenu;
                 }
-                if (this.optionsIndex == 2) {
+                if (this.optionsIndex === 2) {
                     return SceneAlias.simulationScreen;
                 }
             }
         }
-        if (input == "a") {
+        if (input === "a") {
             for (let i = 0; i < 1 + 9 * modifiers.shift; i++) {
                 const task = new Task(Math.round(Math.random() * 10 + 1), Math.round(Math.random() * 10 + 1), Math.random() > 0.5 ? null : Math.round(Math.random() * 10 + 1)); // Random burstTime between 1 and 10
                 if (Math.random() > 0.5) {
@@ -138,12 +138,12 @@ class TaskScreen extends Scene {
                 this.scheduler.startingTasks.push(task);
             }
         }
-        if (input == "e") {
+        if (input === "e") {
             if (!this.editingTask && this.rowIndex >= 0) {
                 this.editingTask = !this.editingTask;
             }
         }
-        if (input == "arrowup") {
+        if (input === "arrowup") {
             if (this.editingTask && !modifiers.shift) {
                 //edit task
                 return;
@@ -152,11 +152,11 @@ class TaskScreen extends Scene {
             if (this.rowIndex < -2) {
                 this.rowIndex = -2;
             }
-            if (this.rowIndex == -1) {
+            if (this.rowIndex === -1) {
                 this.rowIndex = -2;
             }
         }
-        if (input == "arrowdown") {
+        if (input === "arrowdown") {
             if (this.editingTask && !modifiers.shift) {
                 //edit task
                 return;
@@ -166,32 +166,32 @@ class TaskScreen extends Scene {
             if (this.rowIndex >= this.scheduler.tasks.length) {
                 this.rowIndex = this.scheduler.tasks.length - 1;
             }
-            if (this.rowIndex == -1) {
+            if (this.rowIndex === -1) {
                 this.rowIndex = 0;
             }
         }
-        if (input == "arrowleft") {
+        if (input === "arrowleft") {
             if (this.editingTask) {
                 this.colIndex--;
                 if (this.colIndex < 0) {
                     this.colIndex = slots.length - 2;
                 }
             }
-            if (this.rowIndex == -2) {
+            if (this.rowIndex === -2) {
                 this.optionsIndex--;
                 if (this.optionsIndex < 0) {
                     this.optionsIndex = 2;
                 }
             }
         }
-        if (input == "arrowright") {
+        if (input === "arrowright") {
             if (this.editingTask) {
                 this.colIndex++;
                 if (this.colIndex >= slots.length - 1) {
                     this.colIndex = 0;
                 }
             }
-            if (this.rowIndex == -2) {
+            if (this.rowIndex === -2) {
                 this.optionsIndex++;
                 if (this.optionsIndex > 2) {
                     this.optionsIndex = 0;

@@ -56,7 +56,7 @@ class OpeningAnimation extends Scene {
 
     }
     handleInput(input, modifiers) {
-        if (input == "enter" || input == "space") {
+        if (input === "enter" || input === "space") {
             return SceneAlias.wecome;
         }
     }

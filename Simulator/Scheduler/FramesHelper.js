@@ -49,8 +49,8 @@ const genTaskTable = (taskArray, slots, maxRows, select = { row: -1, col: -1 }, 
     const getIndexRange = (index, length, maxRows) => {
         // maxRows = 15
         const half = Math.floor(maxRows / 2);
-        //const even = maxRows % 2 == 0 ? 1 : 0;
-        const odd = maxRows % 2 == 0 ? 0 : 1;
+        //const even = maxRows % 2 === 0 ? 1 : 0;
+        const odd = maxRows % 2 === 0 ? 0 : 1;
        // console.log("I:", index, "L:", length, "M:", maxRows, "H:", half, "E:", even);
         //case 1: if the length is less than maxRows, return the whole array
         if (length <= maxRows) {
@@ -58,7 +58,7 @@ const genTaskTable = (taskArray, slots, maxRows, select = { row: -1, col: -1 }, 
         }
         //case 2: if there is less than half elements before the index, return the first half elements -1 for the header
         if (index - half <= 0) {
-            // if ((index + 1) - half  == 0)
+            // if ((index + 1) - half  === 0)
             //     return { start: 1, end: maxRows -1, _case: 2};
             // else 
             return { start: 0, end: maxRows - 1, _case: 2 };
@@ -86,7 +86,7 @@ const genTaskTable = (taskArray, slots, maxRows, select = { row: -1, col: -1 }, 
 
         for (let j = 0; j < slots.length; j++) {
             let val = slots[j].getValue(taskArray[i], i);
-            if (j == attrIndex && selIndex == i) {
+            if (j === attrIndex && selIndex === i) {
 
                 val = CH.hcenter(val, slots[j].width - 1) + Arrows.upDown;
                 val = CH.insert_format({
@@ -169,10 +169,10 @@ const genProcessorGraph = (history, currentIndex, reservedWidth = 0) => {
             if (history[index].t > 999) {
                 currentSlice = currentSlice[0] + "." + currentSlice[currentSlice.length - 1];
             }
-            if (history[index].t == history[history.length - 1].t) {
+            if (history[index].t === history[history.length - 1].t) {
                 currentSlice = CH.insert_color(Colors.GREEN, currentSlice);
             }
-            else if (history[index].t == history[currentIndex].t) {
+            else if (history[index].t === history[currentIndex].t) {
                 currentSlice = CH.insert_color(Colors.YELLOW, currentSlice);
             }
             currentSlice += "|\n";
