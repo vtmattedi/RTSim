@@ -11,8 +11,9 @@
 * A value of -2 in the x position means that the object will be drawn at the start of the line. (CH.merge(object.getValue(), currentFrame)
 */
 import { BasicConsole } from "./ConsoleHelp.js";
-import fs from 'fs';
+
 const CH = new BasicConsole();
+
 class SceneObject {
     constructor(pos, getValue) {
         if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number' || typeof pos.z !== 'number') {

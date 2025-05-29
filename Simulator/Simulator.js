@@ -96,7 +96,7 @@ class Simulator {
         if (typeof fn !== "function") {
             return;
         }
-        this.Engine.onExit = fn;
+        this.Engine.setExitCallback(fn);
     }
 }
 

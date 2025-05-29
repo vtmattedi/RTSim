@@ -61,6 +61,7 @@ class ConsoleEngine {
     #minSize = { w: -1, h: -1 }; // Minimum size for the console
     #lastInput = null; // Last input received by the engine
     #Version = "1.0";
+    #onExit = null; // Callback for when the engine exits
     get Version() {
         return this.#Version;
     }
@@ -76,7 +77,6 @@ class ConsoleEngine {
         this.locked = false;
         this.debug = false;
         this.lastFrame = Date.now();
-        this.onExit = null;
         this.resize();
         this.#start();
     }
@@ -152,8 +152,39 @@ class ConsoleEngine {
                 this.goToScene(alias || scene.constructor.name);
         }
     }
-
-
+    /**
+     * Resets the engine.
+     * Clears the scene history and the list of scenes.
+     */
+    reset() {
+        this.sceneHistory = [];
+        this.scenes = [];
+        this.msgBox.reset();
+        this.#camera_pos = { x: 0, y: 0 };
+        this.locked = false;
+        this.debug = false;
+        this.lastFrame = Date.now();
+        this.resize();
+    }
+    exit(){
+        this.reset()
+        if (this.onExit) {
+    
+            this.onExit();
+        } 
+    }
+    /**
+     * Configures the exit callback for the engine.
+     * This callback is invoked when the user chooses to exit the application.
+     * If the provided callback is not a function, no changes are made to the exit behavior.
+     * @param {*} callback 
+     */
+    setExitCallback(callback) {
+        if (typeof callback === "function") {
+            this.onExit = callback;
+        }
+        
+    }
     /**
      * Navigates to a specified scene by its alias or navigates back to the previous scene.
      *
@@ -434,7 +465,6 @@ class ConsoleEngine {
                 const msgBoxLength = CH.getSize(msgBox.text);
                 text = text.split("\n").map((line, index) => {
                     if (index >= msgBox.pos.y && index < msgBox.pos.y + msgBoxLength.height) {
-                        msgBoxLines[index - msgBox.pos.y].length;
                         line = CH.getSafeSubstring(line, 0, msgBox.pos.x - 1) + msgBoxLines[index - msgBox.pos.y] + CH.getSafeSubstring(line, msgBox.pos.x + msgBoxLength.width, CH.getWidth());
                     }
                     return line;
