@@ -20,12 +20,13 @@ const slots = [
 ]
 
 const desc = [
-    "The time (in time units) it takes to complete the task.",
-    "The time (in time units) at which the task is expected to be completed.",
-    "The priority of the task.",
-    "The core to which the task is pinned.",
-    "The color of the task.",
-    "Whether the task is periodic or not. (only for tasks with a deadline)",
+    "Arrival Time: The time the task arrives in the system.",
+    "Burst Time: The time (in time units) it takes to complete the task.",
+    "Deadline: The time (in time units) at which the task is expected to be completed.",
+    "Priority: The priority of the task. Higher values indicate higher priority.",
+    "Pinned Core: The core to which the task is pinned.",
+    "Color: The color of the task.",
+    "Whether the task is periodic or not. (only for tasks with a deadline) Same task will be created after comletion ",
 ]
 
 const bold = (text) => {
@@ -33,13 +34,14 @@ const bold = (text) => {
 }
 
 class TaskScreen extends Scene {
-    constructor(scheduler) {
+    constructor(scheduler, config) {
         super();
         this.scheduler = scheduler;
         this.colIndex = 0;
         this.rowIndex = -2;
         this.editingTask = false;
         this.optionsIndex = 0;
+        this.config = config;
 
     }
     onEnter() {
@@ -53,19 +55,24 @@ class TaskScreen extends Scene {
         let text = CH.getFigLet(`Task${CH.getWidth() < 70 ? "\n" : " "}Manager`);
         text += "\n\n";
         text += CH.hcenter("System-Config", CH.getWidth(), "-") + "\n";
-        
-        let configs = ["Processors: " + this.scheduler.numProcessors, "Algorithm: " + this.scheduler.model.name, "Time Quantum: " + this.scheduler.timeQuantum, "Time Slice: " + this.scheduler.timeSlice];
+        const _showed_configs_id = [0, 1, 2, 6];
+        const configs = this.config.filter((config) => {
+            return _showed_configs_id.includes(config.id);
+        }).map((config) => {
+            return `${config.name}: ${config.transformValue ? config.transformValue(config.value) : config.value}`;
+        });
+
         text += "|" + CH.hcenter(configs.map((config) => {
             return CH.hcenter(config, Math.floor(CH.getWidth() / config.length) - 1, " ");
         }).join(" "), CH.getWidth() - 2) + "|\n";
-        
+
         let nav = ["Back", "System Config", "Start Simulation"];
         text += "|" + CH.hcenter(nav.map((nav, index) => {
             return CH.hcenter(formatText(nav, this.rowIndex === -2 && this.optionsIndex === index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
         }).join(" "), CH.getWidth() - 2) + "|\n";
-        
+
         text += "-".repeat(CH.getWidth()) + "\n";
-        
+
         const inputs = [
             {
                 value: `(${Arrows.up})A`,
@@ -98,6 +105,76 @@ class TaskScreen extends Scene {
         return text;
 
     }
+
+    editTask(val) {
+        const task = this.scheduler.startingTasks[this.rowIndex];
+        const col = this.colIndex + 1;
+
+        const columns =
+        {
+            taskId: 0,
+            arrivalTime: 1,
+            burstTime: 2,
+            deadline: 3,
+            priority: 4,
+            pinToCore: 5,
+            color: 6,
+            periodic: 7,
+
+        }
+        if (!task) {
+            return;
+        }
+        if (col === columns.arrivalTime) {
+            // Arrival Time
+            task.arrivalTime = Math.max(task.arrivalTime + val, 0);
+        } else if (col === columns.burstTime) {
+            // Burst Time
+            task.burstTime = Math.max(task.burstTime + val, 1);
+        } else if (col === columns.deadline) {
+            // Deadline
+            if (task.deadline === null) {
+                task.deadline = 0; // If no deadline, set it to 0
+            }
+            task.deadline = Math.max(task.deadline + val, 0);
+            if (task.deadline === 0) {
+                task.deadline = null; // If deadline is 0, set it to null
+            }
+        } else if (col === columns.priority) {
+            // Priority
+            task.priority = Math.max(task.priority + val, 0); // Ensure priority does not go below 0
+        } else if (col === columns.pinToCore) {
+            // Pin to Core
+            if (task.pinToCore === null)
+                task.pinToCore = 0; // If not pinned, pin to core 0
+            else if (task.pinToCore == 0 && val < 0) {
+                task.pinToCore = null; // If pinned to core 0 and decrement, unpin
+            }
+            else {
+                const maxCores = this.config.find(config => config.name === "Processors")?.value - 1|| 0;
+                task.pinToCore += val;
+                if (task.pinToCore > maxCores) {
+                    task.pinToCore = null; // If exceeds max cores, unpin
+                }
+            }
+
+        } else if (col === columns.color) {
+            // Color
+            task.color = (task.color + val) % 256;
+        } else if (col === columns.periodic) {
+
+            if (task.deadline === null) {
+                return;
+            }
+            if (!task.period) {
+                task.period = 1; // If no period, set it to 1
+            }
+            else if (task.period) {
+                task.period = 0;
+            }
+        }
+    }
+
     handleInput(input, modifiers) {
         if (input === "esc") {
             if (this.editingTask) {
@@ -142,10 +219,13 @@ class TaskScreen extends Scene {
             if (!this.editingTask && this.rowIndex >= 0) {
                 this.editingTask = !this.editingTask;
             }
+            else if (this.editingTask) {
+                this.editingTask = false;
+            }
         }
         if (input === "arrowup") {
             if (this.editingTask && !modifiers.shift) {
-                //edit task
+                this.editTask(1);
                 return;
             }
             this.rowIndex--;
@@ -158,13 +238,13 @@ class TaskScreen extends Scene {
         }
         if (input === "arrowdown") {
             if (this.editingTask && !modifiers.shift) {
-                //edit task
+                this.editTask(-1);
                 return;
             }
 
             this.rowIndex++;
-            if (this.rowIndex >= this.scheduler.tasks.length) {
-                this.rowIndex = this.scheduler.tasks.length - 1;
+            if (this.rowIndex >= this.scheduler.startingTasks.length) {
+                this.rowIndex = this.scheduler.startingTasks.length - 1;
             }
             if (this.rowIndex === -1) {
                 this.rowIndex = 0;
@@ -177,12 +257,15 @@ class TaskScreen extends Scene {
                     this.colIndex = slots.length - 2;
                 }
             }
+
+            // Handle options navigation
             if (this.rowIndex === -2) {
                 this.optionsIndex--;
                 if (this.optionsIndex < 0) {
                     this.optionsIndex = 2;
                 }
             }
+
         }
         if (input === "arrowright") {
             if (this.editingTask) {
@@ -191,12 +274,14 @@ class TaskScreen extends Scene {
                     this.colIndex = 0;
                 }
             }
+            // Handle options navigation
             if (this.rowIndex === -2) {
                 this.optionsIndex++;
                 if (this.optionsIndex > 2) {
                     this.optionsIndex = 0;
                 }
             }
+
         }
     }
 }

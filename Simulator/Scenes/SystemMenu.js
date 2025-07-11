@@ -153,8 +153,6 @@ class SystemMenu extends Scene {
                     return SceneAlias.simulationScreen;
                 }
             }
-
-
         }
     }
 }

@@ -199,6 +199,7 @@ class Scheduler {
         this.lastValidTasks = [];
         this.model = AlgoFactory.createAlgorithm(getValue("Scheduler Algorithm", AlgorithmModels.FCFS), { timeQuantum: getValue("Time Quantum", 1) }); // Default algorithm
         this.t = 0;
+        this.#taskIDs = 0; // reset task IDs
         //Reset all the tasks
         this.tasks = [];
     }

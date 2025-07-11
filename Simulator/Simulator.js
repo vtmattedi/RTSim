@@ -33,10 +33,8 @@ class Simulator {
             { id: 3, name: "Chance of new task", value: 1, min: 0, max: 100, step: 1, unit: "%", desc: "Chance of a new task being added to the system each time step." },
             { id: 4, name: "Tasks to be added", value: 1, min: 1, max: 100, step: 1, desc: "Number of tasks to be added to the system per time that a new task is added." },
             { id: 5, name: "Enable core pinning", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable random tasks to be born pinned to a core." },
-            { id: 6, name: "Enable deadlines", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable random tasks to be born with a deadline." },
-            { id: 7, name: "Auto Time Step", value: 50, min: 10, max: Infinity, step: 10, unit: "ms", desc: "Real time in between each automatic time step. You can play/pause the auto stepper also manually time step and check the state in the previous time at any time." },
-            { id: 8, name: "Allow dead tasks", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Allow tasks to be born with a deadline greater than their burst time." },
-            { id: 9, name: "Preemptive System", value: 0, min: 0, max: 1, step: 1, transformValue: (value) => { return value === 1 ? "YES" : "NO" }, desc: "Allows the schuduler to choose another task to run in the next time step." },
+            { id: 6, name: "Auto Time Step", value: 50, min: 10, max: Infinity, step: 10, unit: "ms", desc: "Real time in between each automatic time step. You can play/pause the auto stepper also manually time step and check the state in the previous time at any time." },
+            { id: 7, name: "Allow dead tasks", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Allow tasks to be born with a deadline greater than their burst time." },
 
         ]
         this.index = 0;
@@ -69,7 +67,7 @@ class Simulator {
         this.Engine.addScene(new welcomeScreen(), SceneAlias.wecome);
         this.Engine.addScene(new MainMenu(), SceneAlias.mainMenu);
         this.Engine.addScene(new SimulationScreen(this.scheduler, this.systemConfig), SceneAlias.simulationScreen);
-        this.Engine.addScene(new TaskScreen(this.scheduler), SceneAlias.taskManager);
+        this.Engine.addScene(new TaskScreen(this.scheduler, this.systemConfig), SceneAlias.taskManager);
         this.Engine.addScene(new SystemMenu(this.systemConfig), SceneAlias.systemMenu);
         this.Engine.addScene(new InfoScreen(), SceneAlias.infoScreen);
         this.Engine.goToScene(SceneAlias.openingAnimation);

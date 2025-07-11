@@ -82,16 +82,16 @@ const msgbox = (text, title = "", options = [], select = -1) => {
     if (title != "")
         textLines = title + "\n" + textLines;
     if (options.length > 0)
-        textLines += "\n" +  CH.hcenter(opts, w-2) + "\n";
+        textLines += "\n" + CH.hcenter(opts, w - 2) + "\n";
     const side = (sidePiece + "\n").repeat(h - 2) + sidePiece;
     textLines = CH.merge(side, textLines, { padding: 0 });
     textLines = CH.merge(textLines, side, { padding: 0 });
     str += textLines;
     str += "\n" + hLine;
-    
+
     const box = str.split("\n");
     let final = box.slice(0, 1) + "\n";// top line
- 
+
     final += box.slice(1, -1).map((line) => {
         const start = CH.getSafeSubstring(line, 0, 0);
         const middle = CH.getSafeSubstring(line, 1, -2);
@@ -157,12 +157,11 @@ class MsgBoxHandler {
         this.setAnimation(true);
     }
 
-    setAnimation(val)
-    {
+    setAnimation(val) {
         if (val && !this.animation) {
             this.animation = setInterval(() => {
                 if (this.state === 0)
-                    return;
+                    return; // If closed, do nothing
                 if (this.state === 1) {
                     this.animIndex += 1;
                     if (this.animIndex >= 30) {
@@ -171,6 +170,7 @@ class MsgBoxHandler {
                     }
                 }
                 else if (this.state === 2) {
+                    return; // Already open, do nothing
                 }
                 else if (this.state === 3) {
                     this.animIndex -= 1;
@@ -216,16 +216,15 @@ class MsgBoxHandler {
             if (this.select >= this.options.length) {
                 this.select = 0;
             }
-        } else if (input === 0 && this.select >= 0 ) {
-            if (this.useAnimation){
-                if (this.state === 2) {
-                    this.state = 3;
-                    this.animIndex = 15;
-                }
-                return;
-            }
-            if (typeof this.onSelect === "function") {    
+        } else if (input === 0 && this.select >= 0) {
+
+            if (typeof this.onSelect === "function") {
                 this.onSelect(this.select);
+            }
+            if (this.useAnimation) {
+                this.state = 3;
+                this.animIndex = 15;
+                return;
             }
             this.open = false;
         }
@@ -268,32 +267,32 @@ class MsgBoxHandler {
             const len = text.length - 1;
             const mid = Math.round(len / 2);
             const dist = Math.floor(len * this.animIndex / 30);
-            
+
             text = text.map((line, index) => {
                 const pos = Math.abs(index - mid); // pos relative to the middle of the box
                 if (index === 0 || index === len || this.state === 2) {
                     return line;
                 }
-                if (this.state== 1 && pos <= dist) {
+                if (this.state == 1 && pos <= dist) {
                     return line;
                 }
                 else if (this.state === 3 && dist >= pos) {
                     return line;
                 }
-                else 
+                else
                     return ""
-            }).filter(a => a!="").join("\n");
+            }).filter(a => a != "").join("\n");
 
             let new_pos = CH.getSize(text);
             new_pos = {
                 x: pos.x,
                 y: Math.round(pos.y + (len - new_pos.height) / 2)
             }
-            pos = new_pos; 
+            pos = new_pos;
         }
-       
 
-        return { text, pos};
+
+        return { text, pos };
     }
 }
 

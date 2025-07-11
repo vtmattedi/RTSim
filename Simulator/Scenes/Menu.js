@@ -18,7 +18,7 @@ class MainMenu extends Scene {
             { text: "Start", response: SceneAlias.simulationScreen},
             { text: "Task Manager", response: SceneAlias.taskManager },
             { text: "Settings",response: SceneAlias.systemMenu },
-            { text: "Help", response: "-1" },
+            { text: "Help", response: -1 },
             { text: "Info", response:  SceneAlias.infoScreen },
             { text: "Exit", response: "Exit" }
         ]
@@ -70,8 +70,8 @@ class MainMenu extends Scene {
             }
         }
         if (input === "enter" || input === "space") {
+            console.log("Selected option: " + this.options[this.currentIndex].text);
             return this.options[this.currentIndex].response;
-
         }
     }
 }
