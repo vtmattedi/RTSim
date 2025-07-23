@@ -1,25 +1,7 @@
-import fs from 'fs';
 
 class LoggerStream{
     write(message) {
         throw new Error("Method not implemented. Use a subclass.");
-    }
-}
-
-class ConsoleLogger extends LoggerStream {
-    write(message) {
-        console.write(message);
-    }
-}
-
-class FileLogger extends LoggerStream {
-    constructor(filePath) {
-        super();
-        this.filePath = filePath;
-        this.fs = fs;
-    }
-    write(message) {
-        this.fs.appendFileSync(this.filePath, message + '\n', 'utf8');
     }
 }
 

@@ -192,6 +192,7 @@ class Scheduler {
         this.softAffinity = {}; // Map to store soft core affinities
         this.contextSwitches = 0; // number of total context switches
         this.tasksMigrations = 0; // number of task migrations
+        this.reduceTaskMigration = false; // flag to reduce task migrations
     }
     // Configures the scheduler with the provided configuration object.
     // if config is null or undefined, it throws an error.
@@ -205,7 +206,7 @@ class Scheduler {
             return value !== undefined ? value : defaultValue;
         }
         this.numProcessors = getValue("Processors", 1); // number of processors
-        this.currentTasks = Array(this.numProcessors);
+        this.reduceTaskMigration = getValue("Reduce task migration", false); // flag to reduce task migrations
         this.lastValidTasks = [];
         this.model = AlgoFactory.createAlgorithm(getValue("Scheduler Algorithm", AlgorithmModels.FCFS), { timeQuantum: getValue("Time Quantum", 1) }); // Default algorithm
         this.t = 0;
@@ -422,7 +423,7 @@ class Scheduler {
         // by checking if the tasks are already running on the cores
         /*
         */
-        if (true) {
+        if (this.reduceTaskMigration) {
             nextTasks = this.minimizeTaskMigrations(nextTasks);
         }
         // Check if there are context switches and task migrations
