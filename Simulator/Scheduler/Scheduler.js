@@ -1,5 +1,6 @@
 import { DefaultColors, BasicConsole, ControlSequences } from "../Engine/ConsoleHelp.js";
 import { AlgoFactory, AlgorithmModels } from "../Algorthims/AlgoFactory.js";
+import { logger } from "../Engine/Logger.js";
 
 const CH = new BasicConsole();
 
@@ -27,14 +28,18 @@ class SchedulerSnapshot {
      * @param {Array} currentTasks - An array of tasks currently running on each processor.
      * @param {Array} tasks - An array of all tasks in the system.
      * @param {Array} validTasks - An array of tasks that are valid for scheduling.
-     */
-    constructor(t, model, numProcessors, currentTasks, tasks, validTasks) {
+     * @param {number} contextSwitches - The number of context switches that occurred up to this time.
+     * @param {number} tasksMigrations - The number of task migrations that occurred up to this time.
+    */
+    constructor(t, model, numProcessors, currentTasks, tasks, validTasks, contextSwitches, tasksMigrations) {
         this.t = t; // current time in time units
         this.model = model; // name of the scheduling algorithm used
         this.numProcessors = numProcessors; // number of processors
         this.currentTasks = currentTasks; // array of tasks currently running on each processor
         this.tasks = tasks; // array of all tasks
         this.validTasks = validTasks; // array of valid tasks
+        this.contextSwitches = contextSwitches; // number of context switches that occurred in this tick
+        this.tasksMigrations = tasksMigrations; // number of task migrations that occurred in this tick
     }
 }
 
@@ -145,7 +150,7 @@ class Task {
     static getLine(task, size = 1) {
         let line = "";//task.format.char.repeat(size);
         line = " ".repeat(size);
-        line = CH.insert_color(DefaultColors.custom_colors(task.color? task.color: 255,true), line);
+        line = CH.insert_color(DefaultColors.custom_colors(task.color ? task.color : 255, true), line);
 
         // console.log(line)
         // console.log(task.format.color.replace("38","48"), line.replace(" ", "+").replace(ControlSequences.CSI, "ESC"));
@@ -184,7 +189,12 @@ class Scheduler {
         this.lastValidTasks = [];
         this.model = AlgoFactory.createAlgorithm(AlgorithmModels.SJF, { timeQuantum: 1 }); // Default algorithm
         this.t = 0; // initial time in time units
+        this.softAffinity = {}; // Map to store soft core affinities
+        this.contextSwitches = 0; // number of total context switches
+        this.tasksMigrations = 0; // number of task migrations
     }
+    // Configures the scheduler with the provided configuration object.
+    // if config is null or undefined, it throws an error.
     configure(config) {
         if (!config) {
             console.log("config: ", config);
@@ -202,6 +212,12 @@ class Scheduler {
         this.#taskIDs = 0; // reset task IDs
         //Reset all the tasks
         this.tasks = [];
+        this.currentTasks = Array(this.numProcessors).fill(null);
+        this.lastValidTasks = [];
+        //Resets The switches and migrations
+        this.contextSwitches = 0;
+        this.tasksMigrations = 0;
+        this.softAffinity = {};
     }
     addTask(task) {
         if (task instanceof Task === false) {
@@ -239,9 +255,80 @@ class Scheduler {
             this.numProcessors, // number of processors (Shouldnt change between snapshots)
             cpy_currentTasks,// copy of the currentTasks
             cpy_tasks,// copy of the tasks
-            cpy_valid_tasks// copy of the valid tasks. this should be sorted as seen by the scheduler
+            cpy_valid_tasks,// copy of the valid tasks. this should be sorted as seen by the scheduler
+            this.contextSwitches, // number of context switches that occurred in this tick
+            this.tasksMigrations // number of task migrations that occurred in this tick
         );
     }
+    // Minimize task migrations on the taskArray
+    // The index of the taskArray has to be the core number
+    // This function will try to minimize the number of task migrations
+    // And return the taskArray with the tasks that are running on the cores
+    minimizeTaskMigrations(taskArray) {
+
+        const availableCores = new Set();
+        const tasksThatAreNotOnPreferredCores = new Set();
+        logger.log(`Minimizing task migrations for ${taskArray.length} tasks on ${this.numProcessors} cores.`);
+        logger.log(`Current Tasks: ${taskArray.map(task => task ? `${task.id}:{${task.pinToCore}}` : 'null').join(', ')}`);
+        logger.log(`Soft Affinity: ${JSON.stringify(this.softAffinity)}`);
+        // Iterate through the taskArray to find tasks that are not on their preferred cores
+        for (let i = 0; i < taskArray.length; i++) {
+            if (taskArray[i] !== null) {
+                // If a task is pinned to a core, it IS running on that core
+                if (taskArray[i].pinToCore !== null) continue;
+                // If the task is not pinned to a core, we check if it is running on its preferred core
+                // I.E. the last core it was running on
+                if (this.softAffinity[taskArray[i].id] !== undefined) {
+                    // Check if the task is running on its preferred core
+                    // If it is not running on its preferred core, 
+                    // we add it to the available cores set
+                    if (this.softAffinity[taskArray[i].id] !== i) {
+                        availableCores.add(i);
+                        tasksThatAreNotOnPreferredCores.add(taskArray[i]);
+                    }
+                }
+                else {
+                    // If the task has no affinity, it is its first time running
+                    // therefore we add it to the available cores set
+                    availableCores.add(i);
+                    tasksThatAreNotOnPreferredCores.add(taskArray[i]);
+                }
+            }
+            else{
+                availableCores.add(i); // If the core is not occupied, we add it to the available cores set
+            }
+        }
+        
+        // Now we have a set of available cores and tasks that are not on their preferred cores
+        // We will try to assign the tasks that are not on their preferred cores to the available cores
+
+        for (const task of tasksThatAreNotOnPreferredCores) {
+            const preferredCore = this.softAffinity[task.id];
+            if (preferredCore === undefined) {
+                // If the task has no preferred core, we skip it
+                continue;
+            }
+            if (availableCores.has(preferredCore)) {
+                // If the preferred core is available:
+                // Swap this task with the task that is currently running on the preferred core
+
+                const oldTaskAtTargetCore = taskArray[preferredCore];
+                const oldCoreIndex = taskArray.indexOf(task);
+                taskArray[oldCoreIndex] = oldTaskAtTargetCore;
+                taskArray[preferredCore] = task;
+
+                // The preferred core is no longer available.
+                // So if two tasks want to run on the same core,
+                // the first will be assigned to the core
+                // and the second will remain in its current core
+                availableCores.delete(preferredCore);
+            }
+        }
+        logger.log(`Current Tasks: ${taskArray.map(task => task ? `${task.id}:{${task.pinToCore}}` : 'null').join(', ')}`);
+
+        return taskArray;
+    }
+
     tick() {
         // pop tasks that are done
 
@@ -263,32 +350,44 @@ class Scheduler {
                     this.addTask(newTask);
             };
         }
-
+        // Sort the tasks based on the algorithm's criteria
         const validtasks = this.model.sortTasks(this.tasks.filter(task => task.status === TaskStates.ready));
         this.lastValidTasks = validtasks;
-        this.currentTasks = Array(this.numProcessors).fill(null);
+        // Generate the tasks for the current tick on the processors
+        let nextTasks = Array(this.numProcessors).fill(null);
         let assigned = 0;
         let validTaskIndex = 0;
         let currentCore = 0;
+        // now we assign the tasks to the processors
+        // we use the tasks sorted by the algorithm
+        // and assign them to each core (Assuming each core has the same)
         while (assigned < this.numProcessors) {
+            const currentValidTask = validtasks[validTaskIndex];
+
             //Check if core is already assigned
-            if (this.currentTasks[currentCore] !== null) {
+            if (nextTasks[currentCore] !== null) {
                 currentCore++;
                 continue; // skip if the core is already occupied
 
             }
             // get the next valid task
-            if (validtasks[validTaskIndex]) {
-
+            if (currentValidTask) {
+                const taskHardCoreAffinity = currentValidTask.pinToCore;
                 // If its pinned to a core, assign it to that core
-                if (validtasks[validTaskIndex].pinToCore !== null) {
-                    if (this.currentTasks[validtasks[validTaskIndex].pinToCore] !== null) {
-                        if (this.currentTasks[validtasks[validTaskIndex].pinToCore].pinToCore === null) {
+                if (taskHardCoreAffinity !== null) {
+                    // Handle the case where the task is pinned to a core
+                    if (nextTasks[taskHardCoreAffinity] !== null) {
+                        const targetCoreIsNotPinned = nextTasks[taskHardCoreAffinity].pinToCore === null;
+                        // Check if the task in the target core is also pinned to a core
+                        if (targetCoreIsNotPinned) {
                             //if target core is already assigned but the assigned task is not pinned to a core, swap the tasks
-                            this.currentTasks[currentCore] = this.currentTasks[validtasks[validTaskIndex].pinToCore];
-                            this.currentTasks[validtasks[validTaskIndex].pinToCore] = validtasks[validTaskIndex];
+                            nextTasks[currentCore] = nextTasks[taskHardCoreAffinity];
+                            nextTasks[taskHardCoreAffinity] = validtasks[validTaskIndex];
                             assigned++;
+                            currentCore++;
                         }
+                        // If we cannot swap the tasks, we cannot execute this task since the previous task 
+                        // was pinned to a core before this and thus has priority over this task
                         else {
                             // If the target core is already assigned and the assigned task is also pinned to a core, skip the task
                             //do nothing
@@ -297,7 +396,7 @@ class Scheduler {
                     }
                     else // If the core is not occupied, assign the task to that core
                     {
-                        this.currentTasks[validtasks[validTaskIndex].pinToCore] = validtasks[validTaskIndex];
+                        nextTasks[validtasks[validTaskIndex].pinToCore] = validtasks[validTaskIndex];
                         assigned++;
 
                     }
@@ -305,10 +404,11 @@ class Scheduler {
                 }
                 else {
                     // If the task is not pinned to a core, assign it to the next available core
-                    this.currentTasks[currentCore] = validtasks[validTaskIndex];
+                    nextTasks[currentCore] = validtasks[validTaskIndex];
                     assigned++;
                     currentCore++;
                 }
+                // Move to the next valid task
                 validTaskIndex++;
             }
             else {
@@ -318,6 +418,37 @@ class Scheduler {
             }
         }
 
+        // Now that we have assigned the tasks to the processors, Minimize the number of task migrations
+        // by checking if the tasks are already running on the cores
+        /*
+        */
+        if (true) {
+            nextTasks = this.minimizeTaskMigrations(nextTasks);
+        }
+        // Check if there are context switches and task migrations
+        logger.log(nextTasks.map(task => task ? `${task.id}:{${task.pinToCore}}` : 'null').join(', '));
+        for (let i = 0; i < nextTasks.length; i++) {
+            // If we changed the task on the core, we increment the context switches    
+            if (this.currentTasks[i] !== nextTasks[i]) {
+                this.contextSwitches += 1; // increment context switches if the task is not the same as the previous one
+            }
+            if (!nextTasks[i]) {
+                continue; // skip if the core is not occupied
+            }
+            // If the core is diferent from the previous core, we increment the task migrations
+            if (this.softAffinity[nextTasks[i].id] !== i) {
+                // If the task was running on a different core, we increment the task migrations
+                if (this.softAffinity[nextTasks[i].id] !== undefined) {
+                    this.tasksMigrations += 1; // increment task migrations
+                    logger.log(`Task ${nextTasks[i].id} migrated to core ${i}`);
+                }
+                this.softAffinity[nextTasks[i].id] = i; // set the thread affinity for the task
+                logger.log(`Task ${nextTasks[i].id} set affinity to core ${i}`);
+            }
+
+        }
+        // Assign the next tasks to the Cores
+        this.currentTasks = nextTasks; // assign the next tasks to the current tasks
         // tick the tasks
         for (let i = 0; i < this.currentTasks.length; i++) {
             if (this.currentTasks[i] !== null) {

@@ -240,6 +240,8 @@ class MsgBoxHandler {
      *                                           The selected option's index is passed as an argument.
      */
     raise(text, title = "", options = [], onSelect) {
+        if (this.useAnimation)
+            this.setAnimation(false);
         this.text = text;
         this.title = title;
         this.select = 0;
@@ -251,6 +253,8 @@ class MsgBoxHandler {
         this.open = true;
         this.state = 1;
         this.animIndex = 0;
+        if (this.useAnimation) 
+            this.setAnimation(true);
 
     }
     /**

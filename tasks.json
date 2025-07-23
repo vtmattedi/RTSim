@@ -1,0 +1,72 @@
+[
+  {
+    "burstTime": 5,
+    "priority": 6,
+    "deadline": 7,
+    "pinToCore": null,
+    "color": "38;5;36"
+  },
+  {
+    "burstTime": 5,
+    "priority": 11,
+    "deadline": 4,
+    "pinToCore": null,
+    "color": "38;5;200"
+  },
+  {
+    "burstTime": 3,
+    "priority": 4,
+    "deadline": 8,
+    "pinToCore": null,
+    "color": "38;5;54"
+  },
+  {
+    "burstTime": 4,
+    "priority": 10,
+    "deadline": null,
+    "pinToCore": null,
+    "color": "38;5;150"
+  },
+  {
+    "burstTime": 2,
+    "priority": 6,
+    "deadline": 7,
+    "pinToCore": null,
+    "color": "38;5;87"
+  },
+  {
+    "burstTime": 7,
+    "priority": 5,
+    "deadline": null,
+    "pinToCore": null,
+    "color": "38;5;92"
+  },
+  {
+    "burstTime": 6,
+    "priority": 5,
+    "deadline": 2,
+    "pinToCore": null,
+    "color": "38;5;248"
+  },
+  {
+    "burstTime": 3,
+    "priority": 9,
+    "deadline": 8,
+    "pinToCore": null,
+    "color": "38;5;110"
+  },
+  {
+    "burstTime": 5,
+    "priority": 10,
+    "deadline": null,
+    "pinToCore": null,
+    "color": "38;5;70"
+  },
+  {
+    "burstTime": 11,
+    "priority": 7,
+    "deadline": 7,
+    "pinToCore": null,
+    "color": "38;5;105"
+  }
+]

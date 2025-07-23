@@ -12,6 +12,8 @@ import { AlgorithmModels, AlgoFactory } from './Algorthims/AlgoFactory.js';
 import { delta } from './Engine/Symbols.js';
 import { InfoScreen } from './Scenes/InfoScreen.js';
 
+
+
 class Simulator {
     #Version = "0.1.0";
     get Version() {
@@ -23,6 +25,12 @@ class Simulator {
         this.scheduler = new Scheduler(6);
         this.snapshots = [];
         this.currentSnapshot = 0;
+        this.io = {
+            configured: false,
+            exists: null,
+            read: null,
+            write: null,
+        }
         this.systemConfig = [
             { id: 0, name: "Processors", value: 4, min: 1, max: 50, step: 1, desc: "Number of processors (cores) to be simulated." },
             {
@@ -35,14 +43,14 @@ class Simulator {
             { id: 5, name: "Enable core pinning", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable random tasks to be born pinned to a core." },
             { id: 6, name: "Auto Time Step", value: 50, min: 10, max: Infinity, step: 10, unit: "ms", desc: "Real time in between each automatic time step. You can play/pause the auto stepper also manually time step and check the state in the previous time at any time." },
             { id: 7, name: "Allow dead tasks", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Allow tasks to be born with a deadline greater than their burst time." },
-
+            { id: 8, name: "Reduce task migration", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable soft affinity for tasks, reducing the likelihood of migration between cores." },
         ]
         this.index = 0;
         this.maxIndex = 0;
         this.firstChar = true;
         for (let i = 0; i < 10; i++) {
             const task = new Task(Math.round(Math.random() * 10 + 1), Math.round(Math.random() * 10 + 1), Math.random() > 0.5 ? null : Math.round(Math.random() * 10 + 1)); // Random burstTime between 1 and 10
-            if (Math.random() > 0.5) {
+            if (Math.random() >1) {
                 task.pinToCore = Math.floor(Math.random() * this.scheduler.numProcessors); // Random core to pin to
             }
             task.setFormat({
@@ -65,10 +73,10 @@ class Simulator {
         }), SceneAlias.openingAnimation);
         this.Engine.targetFPS(60);
         this.Engine.addScene(new welcomeScreen(), SceneAlias.wecome);
-        this.Engine.addScene(new MainMenu(), SceneAlias.mainMenu);
+        this.Engine.addScene(new MainMenu(this.io, this.systemConfig, this.scheduler.startingTasks), SceneAlias.mainMenu);
         this.Engine.addScene(new SimulationScreen(this.scheduler, this.systemConfig), SceneAlias.simulationScreen);
         this.Engine.addScene(new TaskScreen(this.scheduler, this.systemConfig), SceneAlias.taskManager);
-        this.Engine.addScene(new SystemMenu(this.systemConfig), SceneAlias.systemMenu);
+        this.Engine.addScene(new SystemMenu(this.io,this.systemConfig), SceneAlias.systemMenu);
         this.Engine.addScene(new InfoScreen(), SceneAlias.infoScreen);
         this.Engine.goToScene(SceneAlias.openingAnimation);
 
@@ -89,7 +97,19 @@ class Simulator {
             //Maybe
         }
     }
-
+    configureIO(ioFunctions) {
+        this.io.exists = ioFunctions.exists || null;
+        this.io.read = ioFunctions.read || null;
+        this.io.write = ioFunctions.write || null;
+        if (typeof this.io.exists !== "function" ||
+            typeof this.io.read !== "function" ||
+            typeof this.io.write !== "function") {
+            this.io.configured = false;
+        }
+        else {
+            this.io.configured = true;
+        }
+    }
     setupExit(fn) {
         if (typeof fn !== "function") {
             return;

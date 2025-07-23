@@ -12,10 +12,11 @@ const CH = new BasicConsole();
 const navOptions = ["Back", "Set Tasks", "Start Simulation"];
 
 class SystemMenu extends Scene {
-    constructor(options) {
+    constructor(io, options) {
         super();
         this.currentIndex = 0;
         this.navIndex = 0;
+        this.io = io;
         this.options = options;
         this.showTimeQuantum = options.find(o => o.name === "Scheduler Algorithm")?.value === AlgorithmModels.RR;
         this.timeQuantumIndex = options.findIndex(o => o.name === "Time Quantum");
@@ -42,6 +43,7 @@ class SystemMenu extends Scene {
             { key: Arrows.upDown, desc: "Navigate." },
             { key: `(${Arrows.up}) ${Arrows.leftRight}`, desc: "Change value. (x10)" },
             { key: enter, desc: "Select." },
+            { key: "ctrl+s", desc: "Save configuration." },
           ]
     
           let cmdline =  CH.hcenter(cmds.map((obj) => {
@@ -140,6 +142,38 @@ class SystemMenu extends Scene {
             if (this.currentIndex >= this.options.length) {
                 this.currentIndex = this.options.length - 1;
             }
+        }
+        if (input === "s" && modifiers.ctrl) {
+            try
+            {
+                //Create the systemconfig.json file if it does not exist
+                if (!this.io.exists('./systemconfig.json')) {
+                    const config = {
+                        Data: this.options.map((item) => {
+                            return { name: item.name, value: item.value };
+                        }
+                        )
+                    };
+                    this.io.write('./systemconfig.json', JSON.stringify(config, null, 2));
+                }
+                else{
+                    const config = this.io.read('./systemconfig.json');
+                    if (config) {
+                        const parsedConfig = JSON.parse(config);
+                        parsedConfig.Data = this.options.map((item) => {
+                            return { name: item.name, value: item.value };
+                        });
+                        this.io.write('./systemconfig.json', JSON.stringify(parsedConfig, null, 2));
+                    }
+                }
+                MsgBoxHandler.getInstance().raise("Success", "System configuration saved successfully.", ["OK"]);
+            }
+            catch (e) {
+                MsgBoxHandler.getInstance().raise("Error", "Failed to save system configuration: " + e.message, ["OK"]);
+            }
+        }
+        {
+            
         }
         if (input === "enter" || input === "space") {
             if (this.currentIndex === -1) {

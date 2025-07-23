@@ -44,7 +44,34 @@ const sysconfig = {
         return { name: item.name, value: item.value };
     })
 };
-fs.writeFileSync('./systemconfig.json', JSON.stringify(sysconfig, null, 2), 'utf8');
+
+// Creates the systemconfig.json file if it does not exist
+if (!fs.existsSync('./systemconfig.json')) {
+    fs.writeFileSync('./systemconfig.json', JSON.stringify(sysconfig, null, 2), 'utf8');
+}
+
+const t = []
+for (let i = 0; i < 10; i++) {
+    const task = {
+        burstTime: sim.scheduler.startingTasks[i].burstTime,
+        priority: sim.scheduler.startingTasks[i].priority,
+        deadline: sim.scheduler.startingTasks[i].deadline,
+        pinToCore: sim.scheduler.startingTasks[i].pinToCore,
+        color: sim.scheduler.startingTasks[i].format.color,
+    }
+    t.push(task);
+}
+// if (fs.existsSync('./tasks.json')) {
+//     fs.unlinkSync('./tasks.json'); // Remove the old file if it exists
+// }
+
+fs.writeFileSync('./tasks.json', JSON.stringify(t, null, 2), 'utf8', (err) => {
+    if (err) {
+        MsgBoxHandler.getInstance().raise("Error", "Failed to save tasks: " + err.message, ["OK"]);
+    }
+});
+
+
 //Parse Args 
 let silentStart = false;
 if (argv.length > 2) {
@@ -114,8 +141,25 @@ sim.setupExit(
     }
 )
 
-
-
+//Configure the IO for the simulator
+sim.configureIO({
+    exists: (file) => {
+        return fs.existsSync(file);
+    },
+    read: (file) => {
+        return fs.readFileSync(file, 'utf8');
+    },
+    write: (file, data) => {
+        fs.writeFileSync(file, data, 'utf8');
+    },
+    remove: (file) => {
+        const exists = fs.existsSync(file);
+        if (exists) {
+            fs.unlinkSync(file);
+        }
+        return exists;
+    }
+});
 
 //Configure events for the simulator
 process.stdout.on('resize', () => {
