@@ -64,6 +64,10 @@ npm run start
 
 To build the app into an standalone executable binary I used Node's own SEA.
 
+Note: 
+1. Node 24 is require for node SEA.
+2. If you run this inside WSL you will need to install node and npm in the WSL itself and not use via windows (default)
+
 There build scripts available that follows the steps on Node's documentation.
 
 * Windows:

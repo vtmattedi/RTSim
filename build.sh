@@ -5,6 +5,7 @@
 # Requirements: node, esbuild, postject
 
 # Default values
+
 foldername="./dist"
 clean=0
 
