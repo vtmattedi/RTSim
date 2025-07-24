@@ -50,26 +50,26 @@ if (!fs.existsSync('./systemconfig.json')) {
     fs.writeFileSync('./systemconfig.json', JSON.stringify(sysconfig, null, 2), 'utf8');
 }
 
-const t = []
-for (let i = 0; i < 10; i++) {
-    const task = {
-        burstTime: sim.scheduler.startingTasks[i].burstTime,
-        priority: sim.scheduler.startingTasks[i].priority,
-        deadline: sim.scheduler.startingTasks[i].deadline,
-        pinToCore: sim.scheduler.startingTasks[i].pinToCore,
-        color: sim.scheduler.startingTasks[i].format.color,
-    }
-    t.push(task);
-}
-// if (fs.existsSync('./tasks.json')) {
-//     fs.unlinkSync('./tasks.json'); // Remove the old file if it exists
+// const t = []
+// for (let i = 0; i < 10; i++) {
+//     const task = {
+//         burstTime: sim.scheduler.startingTasks[i].burstTime,
+//         priority: sim.scheduler.startingTasks[i].priority,
+//         deadline: sim.scheduler.startingTasks[i].deadline,
+//         pinToCore: sim.scheduler.startingTasks[i].pinToCore,
+//         color: sim.scheduler.startingTasks[i].format.color,
+//     }
+//     t.push(task);
 // }
+// // if (fs.existsSync('./tasks.json')) {
+// //     fs.unlinkSync('./tasks.json'); // Remove the old file if it exists
+// // }
 
-fs.writeFileSync('./tasks.json', JSON.stringify(t, null, 2), 'utf8', (err) => {
-    if (err) {
-        MsgBoxHandler.getInstance().raise("Error", "Failed to save tasks: " + err.message, ["OK"]);
-    }
-});
+// fs.writeFileSync('./tasks.json', JSON.stringify(t, null, 2), 'utf8', (err) => {
+//     if (err) {
+//         MsgBoxHandler.getInstance().raise("Error", "Failed to save tasks: " + err.message, ["OK"]);
+//     }
+// });
 
 
 //Parse Args 
