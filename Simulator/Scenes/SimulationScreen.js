@@ -35,7 +35,7 @@ class SimulationScreen extends Scene {
     this.scheduler = scheduler;
     this.snapHistory = [];
     this.timer = null;
-    this.chanceOfNewTask = config.find(o => o.name === "Chance of new task")?.value * 0.1 || 0.5;
+    this.chanceOfNewTask = config.find(o => o.name === "Chance of new task")?.value * 0.01 || 0;
     this.currentIndex = 0;
     this.selTaskIndex = -2;
     this.currentTaskIndex = 0;
@@ -47,7 +47,6 @@ class SimulationScreen extends Scene {
     delete this.snapHistory;
     this.snapHistory = []
     this.snapHistory.push(this.scheduler.getSnapshot());
-    this.chanceOfNewTask = config.find(o => o.name === "Chance of new task")?.value * 0.01 || 0;
     this.currentIndex = 0;
     this.selTaskIndex = -2;
     this.currentTaskIndex = 0;
