@@ -380,6 +380,15 @@ class BasicConsole extends ConsoleImplementation {
     // Horizontal center a line, mode => 0 = center, 1 = left, 2 = right
     // MultiLine text is supported, each line will be centered
     // if treatAsRaw is true, it will treat the input as a single line
+    
+    /**
+    * Horizontal center a line, mode => 0 = center, 1 = left, 2 = right
+    * MultiLine text is supported, each line will be centered
+    * @param {string} input - The text to center
+    * @param {number} size - The width of the console, if -1 it will use the current console width
+    * @param {string} char - The character to use for padding, default is space
+    * @param {number|string} mode - The mode to use for centering, 0 = center, 1 = left, 2 = right, or a string 'left', 'right'
+    */
     hcenter = (input, size = -1, char = " ", mode = 0) => {
         if (typeof input !== "string") return "";
         if (size < 0) {

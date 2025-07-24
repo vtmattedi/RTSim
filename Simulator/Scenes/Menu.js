@@ -59,7 +59,7 @@ class MainMenu extends Scene {
                 }
             }
 
-            if (this.io.exists('tasks.json')) {
+            if (this.io.exists('tasks.json') && !this.io.fileLoaded) {
                 const tasks = this.io.read('tasks.json');
                 MsgBoxHandler.getInstance().raise(
                     "Do you want to load the tasks configured from the tasks.json file?",
@@ -69,18 +69,14 @@ class MainMenu extends Scene {
                         if (confirmed === 0) {
                             try {
                                 const parsedTasks = JSON.parse(tasks);
+                                // Clear existing tasks
+                                this.startingTasks.length = 0;
                                 if (Array.isArray(parsedTasks)) {
                                     this.startingTasks.push(...parsedTasks.map(task => {
-                                        const newTask = new Task(task.burstTime, task.priority, task.period);
-                                        newTask.pinToCore = task.pinToCore;
-                                        newTask.setFormat({
-                                            color: task.color,
-                                            background: task.background,
-                                            char: task.char
-                                        });
-                                        newTask.arrivalTime = task.arrivalTime || 0;
-                                        return newTask;
+                                        return Task.fromObject(task);
                                     }));
+                                    logger.log("Tasks loaded from tasks.json file:");
+                                    logger.log(this.startingTasks);
                                     MsgBoxHandler.getInstance().raise("Success", "Tasks loaded successfully from tasks.json file.", ["OK"]);
                                 } else {
                                     MsgBoxHandler.getInstance().raise("Error", "Invalid tasks format in tasks.json file.", ["OK"]);
@@ -130,7 +126,6 @@ class MainMenu extends Scene {
             }
         }
         if (input === "enter" || input === "space") {
-            console.log("Selected option: " + this.options[this.currentIndex].text);
             return this.options[this.currentIndex].response;
         }
     }

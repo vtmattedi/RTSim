@@ -172,9 +172,6 @@ class SystemMenu extends Scene {
                 MsgBoxHandler.getInstance().raise("Error", "Failed to save system configuration: " + e.message, ["OK"]);
             }
         }
-        {
-            
-        }
         if (input === "enter" || input === "space") {
             if (this.currentIndex === -1) {
                 if (this.navIndex === 0) {

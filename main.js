@@ -6,11 +6,72 @@ import fs from 'fs';
 import { Task } from './Simulator/Scheduler/Scheduler.js';
 import { MsgBoxHandler } from './Simulator/Engine/messageBox.js';
 import SceneAlias from './Simulator/Scenes/Alias.js';
+import { logger } from './Simulator/Engine/Logger.js';
+
+//Parse Args 
+let silentStart = false;
+let startingTasks = [];
+if (argv.length > 2) {
+    for (let i = 2; i < argv.length; i++) {
+        if (argv[i] === "--help" || argv[i] === "-h") {
+            console.log("Scheduler Simulator - Help");
+            console.log("Usage: node main.js [options]");
+            console.log("Options:");
+            console.log("--help, -h: Show this help message and exit.");
+            console.log("--config, -c: Show the current configuration.");
+            console.log("--version, -v: Show the version of the simulator.");
+            process.exit(0);
+        }
+        else if (argv[i] === "-f") {
+            if (argv[i + 1]) {
+                const fileName = argv[i + 1];
+                if (!fileName.endsWith(".json")) {
+                    console.log("File must be a .json file");
+                    MsgBoxHandler.getInstance().raise("File must be a .json", "Error loading tasks File", ["OK"]);
+                }
+                else if (!fs.existsSync(fileName)) {
+                    console.log("File does not exist: " + fileName);
+                    MsgBoxHandler.getInstance().raise("File: " + fileName + " does not exist", "Error loading tasks File", ["OK"]);
+                }
+                else {
+                    console.log("Loading tasks from file: " + fileName);
+                    const file = fs.readFileSync(fileName, 'utf8')
+                    const tasks = JSON.parse(file);
+                    if (tasks.length > 0) {
+                        tasks.forEach((task) => {
+                            const newTask = Task.fromObject(task);
+                            startingTasks.push(newTask);
+                        });
+                    }
+                }
+
+                i++;
+            }
+        }
+        else if (argv[i] === "--version" || argv[i] === "-v") {
+            console.log("Scheduler Simulator Version: " + sim.Version);
+            console.log("Engine Version: " + sim.Engine.Version);
+            process.exit(0);
+        }
+        else if (argv[i] === "-s" || argv[i] === "-silent") {
+            silentStart = true;
+        }
+
+    }
+
+}
 
 //Create the simulator instance and the console instance
-const sim = new Simulator();
+const sim = new Simulator(startingTasks.length > 0 ? startingTasks : undefined);
 //Basic Console configs
 const CH = new ConsoleImpl.BasicConsole();
+
+logger.logger = {
+    write: (message) => {
+        fs.appendFileSync('simulator.log', message + '\n', 'utf8');
+    }
+}
+
 CH.setTitle('Scheduler Simulator');
 CH.show_cursor(false);
 CH.clear_screen();
@@ -50,66 +111,7 @@ if (!fs.existsSync('./systemconfig.json')) {
     fs.writeFileSync('./systemconfig.json', JSON.stringify(sysconfig, null, 2), 'utf8');
 }
 
-//Parse Args 
-let silentStart = false;
-if (argv.length > 2) {
-    for (let i = 2; i < argv.length; i++) {
-        if (argv[i] === "--help" || argv[i] === "-h") {
-            console.log("Scheduler Simulator - Help");
-            console.log("Usage: node main.js [options]");
-            console.log("Options:");
-            console.log("--help, -h: Show this help message and exit.");
-            console.log("--config, -c: Show the current configuration.");
-            console.log("--version, -v: Show the version of the simulator.");
-            process.exit(0);
-        }
-        else if (argv[i] === "-f") {
-            if (argv[i + 1]) {
-                const fileName = argv[i + 1];
-                if (!fileName.endsWith(".json")) {
-                    MsgBoxHandler.getInstance().raise("File must be a .json", "Error loading tasks File", ["OK"]);
-                }
-                else if (!fs.existsSync(fileName)) {
-                    MsgBoxHandler.getInstance().raise("File: " + fileName + " does not exist", "Error loading tasks File", ["OK"]);
-                }
-                else {
-                    const file = fs.readFileSync(fileName, 'utf8', (err, data) => {
-                        if (err) {
-                            MsgBoxHandler.getInstance().raise("Error", err, ["OK"]);
 
-                        }
-                        if (data) {
-                            const tasks = JSON.parse(data);
-                            const validTasks = [];
-                            if (tasks.length > 0) {
-                                tasks.forEach((task) => {
-                                    if (task.name && task.time && task.priority) {
-                                        validTasks.push(new Task(task.burstTime, task.priority, task.deadline, task.pinToCore));
-                                    }
-                                    else {
-                                        MsgBoxHandler.getInstance().raise("Error", "Invalid task format", ["OK"]);
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-
-                i++;
-            }
-        }
-        else if (argv[i] === "--version" || argv[i] === "-v") {
-            console.log("Scheduler Simulator Version: " + sim.Version);
-            console.log("Engine Version: " + sim.Engine.Version);
-            process.exit(0);
-        }
-        else if (argv[i] === "-s" || argv[i] === "-silent") {
-            silentStart = true;
-        }
-
-    }
-
-}
 //Configure how to exit the simulator
 sim.setupExit(
     () => {

@@ -1,7 +1,7 @@
 import { DefaultColors, BasicConsole, ControlSequences } from "../Engine/ConsoleHelp.js";
 import { AlgoFactory, AlgorithmModels } from "../Algorthims/AlgoFactory.js";
 import { logger } from "../Engine/Logger.js";
-import { TaskStates, Task } from "./TaskStates.js";
+import { TaskStates, Task } from "./Tasks.js";
 const CH = new BasicConsole();
 
 class SoftAffinityController {
@@ -20,10 +20,18 @@ class SoftAffinityController {
             logger.error(`Invalid core ID: ${coreId}. Must be between 0 and ${this.numProcessors - 1}.`);
             return;
         }
+        logger.log(`Setting affinity for task ${this.#getKey(task)} to core ${coreId}`);
         this.softAffinity[this.#getKey(task)] = coreId; // Set the core affinity for the task
     }
     getAffinity(task) {
-        return this.softAffinity[this.#getKey(task)] || undefined; // Return the core affinity for the task or undefined if not set
+        if (!(task instanceof Task)) {
+            logger.error("Task is not an instance of Task class");
+            return undefined;
+        }
+        const key = this.#getKey(task);
+        logger.log(`Getting affinity for task ${key}: ${this.softAffinity[key]}`);
+        logger.log(`Soft Affinity Map: ${JSON.stringify(this.softAffinity)}`);
+        return this.softAffinity[this.#getKey(task)]; // Return the core affinity for the task or undefined if not set
     }
 }
 
@@ -44,15 +52,10 @@ class SchedulerSnapshot {
      * @param {number} contextSwitches - The number of context switches that occurred up to this time.
      * @param {number} tasksMigrations - The number of task migrations that occurred up to this time.
     */
-    constructor(t, model, numProcessors, currentTasks, tasks, validTasks, contextSwitches, tasksMigrations) {
-        this.t = t; // current time in time units
-        this.model = model; // name of the scheduling algorithm used
-        this.numProcessors = numProcessors; // number of processors
-        this.currentTasks = currentTasks; // array of tasks currently running on each processor
-        this.tasks = tasks; // array of all tasks
-        this.validTasks = validTasks; // array of valid tasks
-        this.contextSwitches = contextSwitches; // number of context switches that occurred in this tick
-        this.tasksMigrations = tasksMigrations; // number of task migrations that occurred in this tick
+    constructor(props) {
+        for (const key in props) {
+            this[key] = props[key];
+        }
     }
 }
 
@@ -70,10 +73,12 @@ class Scheduler {
         this.softAffinity = new SoftAffinityController(); // controller for soft core affinities
         this.contextSwitches = 0; // number of total context switches
         this.tasksMigrations = 0; // number of task migrations
+        this.tasksFailed = 0; // number of tasks that failed (missed their deadline)
         this.reduceTaskMigration = false; // flag to reduce task migrations
         this.newTaskConfig = {
             enablePinToCore: true, // Enable pinning tasks to cores
             enableDeadTasks: false, // Enable tasks with deadlines greater than burst time
+            maxBurstTime: 10, // Maximum burst time for random tasks
         };
     }
     // Configures the scheduler with the provided configuration object.
@@ -82,6 +87,7 @@ class Scheduler {
         if (!config) {
             console.log("config: ", config);
             throw new Error("Invalid configuration object");
+            process.exit(1);
         }
         const getValue = (name, defaultValue) => {
             const value = config.find(item => item.name === name)?.value;
@@ -89,6 +95,7 @@ class Scheduler {
         }
         this.newTaskConfig.enablePinToCore = getValue("Enable core pinning", true); // Enable pinning tasks to cores
         this.newTaskConfig.enableDeadTasks = getValue("Allow dead tasks", false); // Enable tasks with deadlines greater than burst time
+        this.newTaskConfig.maxBurstTime = getValue("Max Burst Time", 10); // Maximum burst time for random tasks
         this.numProcessors = getValue("Processors", 1); // number of processors
         this.reduceTaskMigration = getValue("Reduce task migration", false); // flag to reduce task migrations
         this.lastValidTasks = [];
@@ -102,7 +109,8 @@ class Scheduler {
         //Resets The switches and migrations
         this.contextSwitches = 0;
         this.tasksMigrations = 0;
-        this.softAffinity = {};
+        this.tasksFailed = 0; // reset the number of tasks that failed
+        this.softAffinity = new SoftAffinityController(); // reset the soft affinity controller
     }
     addTask(task) {
         if (task instanceof Task === false) {
@@ -123,9 +131,9 @@ class Scheduler {
     addRandomTask(numTasks = 1) {
         for (let i = 0; i < numTasks; i++) {
             let deadline = Math.random() > 0.2 ? Math.round(Math.random() * 10 + 1) : null; // Random deadline between 1 and 10 or null
-            const burstTime = Math.round(Math.random() * 10 + 1); // Random burst time between 1 and 10
+            const burstTime = Math.round(Math.random() * this.newTaskConfig.maxBurstTime + 1); // Random burst time between 1 and maxBurstTime
             const priority = Math.round(Math.random() * 10 + 1); // Random priority between 1 and 10
-            if (this.newTaskConfig.enableDeadTasks && deadline !== null ) {
+            if (this.newTaskConfig.enableDeadTasks && deadline !== null) {
                 deadline += burstTime; // Ensure deadline is greater than burst time if enabled
             }
             const task = new Task(burstTime, priority, deadline);
@@ -142,16 +150,17 @@ class Scheduler {
         const cpy_currentTasks = JSON.parse(JSON.stringify(this.currentTasks))
         const cpy_valid_tasks = JSON.parse(JSON.stringify(this.lastValidTasks));
 
-        return new SchedulerSnapshot(
-            this.t - 1, // time -1 since we do t+=1 at the end of the tick
-            this.model.shortName, // name of the algorithm used
-            this.numProcessors, // number of processors (Shouldnt change between snapshots)
-            cpy_currentTasks,// copy of the currentTasks
-            cpy_tasks,// copy of the tasks
-            cpy_valid_tasks,// copy of the valid tasks. this should be sorted as seen by the scheduler
-            this.contextSwitches, // number of context switches that occurred in this tick
-            this.tasksMigrations // number of task migrations that occurred in this tick
-        );
+        return new SchedulerSnapshot({
+            t: this.t - 1, // time -1 since we do t+=1 at the end of the tick
+            model: this.model.shortName, // name of the algorithm used
+            numProcessors: this.numProcessors, // number of processors (Shouldnt change between snapshots)
+            currentTasks: cpy_currentTasks,// copy of the currentTasks
+            tasks: cpy_tasks,// copy of the tasks
+            validTasks: cpy_valid_tasks,// copy of the valid tasks. this should be sorted as seen by the scheduler
+            contextSwitches: this.contextSwitches, // number of context switches that occurred in this tick
+            tasksMigrations: this.tasksMigrations, // number of task migrations that occurred in this tick
+            tasksFailed: this.tasksFailed // number of tasks that failed (missed their deadline)
+        });
     }
     // Minimize task migrations on the taskArray
     // The index of the taskArray has to be the core number
@@ -188,12 +197,14 @@ class Scheduler {
                 availableCores.add(i); // If the core is not occupied, we add it to the available cores set
             }
         }
-
+        logger.log(`Current Tasks: ${Array.from(tasksThatAreNotOnPreferredCores).map(task => task ? `${task.id}:{${task.pinToCore}}` : 'null').join(', ')}`);
+        logger.log(`Available Cores: ${Array.from(availableCores).join(', ')}`);
         // Now we have a set of available cores and tasks that are not on their preferred cores
         // We will try to assign the tasks that are not on their preferred cores to the available cores
 
         for (const task of tasksThatAreNotOnPreferredCores) {
             const preferredCore = this.softAffinity.getAffinity(task);
+            logger.log(`Task ${task.id} preferred core: ${preferredCore} available cores: ${Array.from(availableCores).join(', ')}`);
             if (preferredCore === undefined) {
                 // If the task has no preferred core, we skip it
                 continue;
@@ -219,44 +230,40 @@ class Scheduler {
         return taskArray;
     }
 
-    rearm(task){
+    rearm(task) {
+        logger.log(`Rearming task ${task.id}`);
         if (task instanceof Task === false) {
             logger.error("Task is not an instance of Task class");
         }
-
+        task.rearmed = true; // mark the task as rearmed
         const _task = Task.fromTask(task);
         _task.assignId(task.id); // reassign the ID to the new task
         _task.instance = task.instance ? task.instance + 1 : 1; // increment the instance number
-        _task.arrivalTime = this.t;
-        Task.resetTimers(_task);
-        _task.status = TaskStates.ready; // set the status to ready
-        this.tasks.push(_task); // add the new task to the tasks array
+        this.addTask(_task); // add the new task to the scheduler
     }
 
     tick() {
         // pop tasks that are done
-
+        logger.log(`Tick: ${this.t} ${'#'.repeat(60)}` );
         this.tasks.forEach(task => {
-            if (task.status === TaskStates.completed || task.status === TaskStates.failed) {
-                if (task.period && task.arrivalTime + task.period < this.t) {
-                    this.rearm(task); // rearm the task if it is periodic
-                }
+            if (task.period > 0 && this.t >= task.arrivalTime + task.period && !task.rearmed) {
+                this.rearm(task); // rearm the task if it is periodic
             }
-            else {
 
-                task.checkTask(this.t); //check if the task is done or failed in the last tick 
-                if (task.remainingTime > 0 && task.status === TaskStates.running)
-                    task.status = TaskStates.ready;
-                if (task.period && task.arrivalTime + task.period >= this.t) {
-                    this.addTask(task);
+            if (!task.completedTime) {
+                    const missedDeadline = !task.checkTask(this.t); // check if the task is done or failed in the last tick
+                    if (missedDeadline)
+                        this.tasksFailed += 1; // increment the number of tasks that failed 
                 }
-            }
+            
+            if (task.remainingTime > 0 && task.status === TaskStates.running)
+                    task.status = TaskStates.ready;
         }
         );
 
         // Add new tasks to the system
         for (const task of this.startingTasks) {
-            if (task.arrivalTime === this.t) {
+            if (task.arrivalTime >= this.t) {
                 const newTask = Task.fromTask(task)
                 if (newTask)
                     this.addTask(newTask);

@@ -9,8 +9,13 @@ import { TaskStates } from '../Scheduler/Scheduler.js';
 const Colors = DefaultColors;
 const CH = new BasicConsole();
 
+const fmt_task = (task) => {
+  const instance = task.instance ? task.instance : 0; // Use instance number if available, otherwise default to 0
+  const key=  `${task.id}#${instance}`;
+  return CH.hcenter("ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + key), 9, " ", 1)
+}
 const slots = [
-  { name: "TASKS", width: 9, getValue: (task) => { return CH.hcenter("ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + task.id), 9, " ", 1) } },
+  { name: "TASKS", width: 9, getValue: (task) => { return fmt_task(task) } },
   { name: "REM", width: 5, getValue: (task) => "" + task.remainingTime },
   { name: "BURST", width: 5, getValue: (task) => "" + task.burstTime },
   { name: "ARR", width: 5, getValue: (task) => "" + task.arrivalTime },
@@ -18,6 +23,7 @@ const slots = [
   { name: "PRIO", width: 6, getValue: (task) => "" + task.priority },
   { name: "PIN", width: 5, getValue: (task) => task.pinToCore !== null ? "" + task.pinToCore : "---" },
   { name: "END", width: 5, getValue: (task) => task.completedTime !== null ? "" + task.completedTime : "---" },
+  { name: "PERIOD", width: 6, getValue: (task) => task.period !== null ? "" + task.period : "---" },
   { name: "STATUS", width: 10, getValue: (task) => task.status },
 ]
 
@@ -163,7 +169,7 @@ class SimulationScreen extends Scene {
     stats.push("AVG TA: " + (totalTA / length).toFixed(2));
     stats.push("AVG RT: " + (totalRT / length).toFixed(2));
     stats.push("AVG WT: " + (totalWT / length).toFixed(2));
-    stats.push("FAILED: " + this.snapHistory[this.currentIndex].tasks.filter(task => task.state === TaskStates.failed && task.deadline !== null).length);
+    stats.push("FAILED: " + this.snapHistory[this.currentIndex].tasksFailed);
     stats.push("CTX SWITCH: " + this.snapHistory[this.currentIndex].contextSwitches);
     stats.push("CORE MIG: " + this.snapHistory[this.currentIndex].tasksMigrations);
 

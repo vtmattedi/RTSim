@@ -38,6 +38,7 @@ class Task {
         this.status = "CREATED"; // ready, running, completed
         this.color = 0;// 8bit number for ANSI color using COLOR.custom_colors()
         this.period = null; // 0 or null if no periodicity
+        this.rearmed = false; // if the task is rearmed, used for periodic tasks
         this.instance = null; // instance of the task, used for periodic tasks (number of times the task has been executed)
     }
 
@@ -61,7 +62,7 @@ class Task {
             this.waitingTime = this.turnAround - this.burstTime; // set waiting time to the time it completed - burst time
 
         }
-        this.checkDeadline(t);
+        return this.checkDeadline(t);
 
     }
     /**
@@ -148,4 +149,23 @@ class Task {
         newTask.period = task.period;
         return newTask;
     }
+
+
+    /*
+        * Creates a new Task instance from an object representation.
+        * @param {Object} obj - The object containing task properties.
+        * @returns {Task} A new Task instance with properties set from the object.
+    */
+    static fromObject(obj) {
+        const newTask = new Task(obj.burstTime, obj.priority, obj.period);
+        newTask.pinToCore = obj.pinToCore;
+        newTask.arrivalTime = obj.arrivalTime || 0;
+        newTask.deadline = obj.deadline || null;
+        newTask.period = obj.period || null;
+        newTask.color = obj.color || Math.random() * 255; // random color if not specified
+        return newTask;
+
+    }
 }
+
+export { Task, TaskStates };

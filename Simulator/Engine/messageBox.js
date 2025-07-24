@@ -9,6 +9,15 @@ const CH = new ConsoleImpl.BasicConsole();
 const Colors = ConsoleImpl.DefaultColors;
 const Decorations = ConsoleImpl.Decorations;
 
+class MsgBoxMessage {
+    constructor(text, title = "", options = [], onSelect) {
+        this.text = text;
+        this.title = title;
+        this.options = options;
+        this.onSelect = onSelect;
+    }
+}
+
 /**
  * Creates a formatted message box with a title, text content, and optional selectable options.
  *
@@ -137,6 +146,7 @@ class MsgBoxHandler {
         }
         return MsgBoxHandler.#instance;
     }
+    #open = false;
     constructor() {
         if (MsgBoxHandler.#instance) {
             return MsgBoxHandler.#instance;
@@ -146,7 +156,6 @@ class MsgBoxHandler {
         this.title = "";
         this.options = [];
         this.select = -1;
-        this.open = false;
         this.onSelect = null;
         this.queue = [];
         this.useAnimation = true;
@@ -155,6 +164,24 @@ class MsgBoxHandler {
         this.animIndex = 0;
         this.state = 0;// 0 - closed, 1 - opening, 2 - open, 3 - closing
         this.setAnimation(true);
+    }
+    get open() {
+        return this.#open;
+    }
+
+    openBox() {
+        if (this.#open)
+            return; // If already open, do nothing
+        this.#open = true;
+        this.state = 1;
+        this.animIndex = 0;
+    }
+
+    closeBox() {
+        if (!this.#open)
+            return; // If not open, do nothing
+        this.#open = false;
+        this.onEnd();
     }
 
     setAnimation(val) {
@@ -177,7 +204,7 @@ class MsgBoxHandler {
                     if (this.animIndex <= 0) {
                         this.state = 0;
                         this.animIndex = 0;
-                        this.open = false;
+                        this.closeBox();
                         if (typeof this.onSelect === "function") {
                             this.onSelect(this.select);
                         }
@@ -226,10 +253,39 @@ class MsgBoxHandler {
                 this.animIndex = 15;
                 return;
             }
-            this.open = false;
+            this.closeBox();
         }
 
     }
+
+    internal(){
+
+    }
+
+    /*
+    Internal function to handle message box updates.
+    */
+    onEnd(){
+        if (this.queue.length > 0) {
+            const msg = this.queue.shift();
+            this.raise(msg.text, msg.title, msg.options, msg.onSelect);
+        }
+    }
+
+    start(msgBoxMessage) {
+        const { text, title, options, onSelect } = msgBoxMessage;
+        this.text = text;
+        this.title = title;
+        this.select = 0;
+        if (Array.isArray(options) && options.length > 0) {
+            this.options = options;
+        } else {
+            options = ["OK"];
+        }
+        this.onSelect = onSelect;
+        this.openBox();
+    }
+
     /**
      * Displays a message box with the specified text, title, and options.
      *
@@ -240,22 +296,10 @@ class MsgBoxHandler {
      *                                           The selected option's index is passed as an argument.
      */
     raise(text, title = "", options = [], onSelect) {
-        if (this.useAnimation)
-            this.setAnimation(false);
-        this.text = text;
-        this.title = title;
-        this.select = 0;
-        if (options.length === 0) {
-            options = ["OK"];
+        this.queue.push(new MsgBoxMessage(text, title, options, onSelect));
+        if (!this.open) {
+            this.start(this.queue.shift());
         }
-        this.options = options;
-        this.onSelect = onSelect;
-        this.open = true;
-        this.state = 1;
-        this.animIndex = 0;
-        if (this.useAnimation) 
-            this.setAnimation(true);
-
     }
     /**
      * Retrieves the text and position from the message box.

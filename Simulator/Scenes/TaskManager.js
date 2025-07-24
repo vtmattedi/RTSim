@@ -2,7 +2,7 @@ import { Scene } from '../Engine/Scenes.js';
 import { BasicConsole, Decorations, DefaultColors } from '../Engine/ConsoleHelp.js';
 import { formatText, genProcessorsFrame, genTaskTable } from '../Scheduler/FramesHelper.js';
 import Assets from '../Engine/Assets/Assets.js';
-import { Arrows } from '../Engine/Symbols.js';
+import { Arrows, delta } from '../Engine/Symbols.js';
 import { Task } from '../Scheduler/Scheduler.js';
 import SceneAlias from './Alias.js';
 const Colors = DefaultColors;
@@ -16,7 +16,7 @@ const slots = [
     { name: "PRIO", width: 6, getValue: (task, index) => { return "" + task.priority; } },
     { name: "PIN", width: 5, getValue: (task, index) => { return task.pinToCore !== null ? "" + task.pinToCore : "---"; } },
     { name: "CLR", width: 5, getValue: (task, index) => { return CH.insert_color(Colors.custom_colors(task.color), "" + task.color); } },
-    { name: "PERI", width: 6, getValue: (task, index) => { return task.period > 0 ? "YES" : "NO"; } },
+    { name: "PERI", width: 6, getValue: (task, index) => { return task.period > 0 ? "" + task.period : "NO"; } },
 ]
 
 const desc = [
@@ -26,7 +26,7 @@ const desc = [
     "Priority: The priority of the task. Higher values indicate higher priority.",
     "Pinned Core: The core to which the task is pinned.",
     "Color: The color of the task.",
-    "Whether the task is periodic or not. (only for tasks with a deadline) Same task will be created after comletion ",
+    `Whether the task is periodic or not. (only makes sense for tasks with a deadline).\nSame task will be [PERI] ${CH.insert_format({ decoration: Decorations.Italic }, delta + "T's")} after each arrival. `
 ]
 
 const bold = (text) => {
@@ -53,25 +53,26 @@ class TaskScreen extends Scene {
 
     draw() {
         let text = CH.getFigLet(`Task${CH.getWidth() < 70 ? "\n" : " "}Manager`);
-        text += "\n\n";
-        text += CH.hcenter("System-Config", CH.getWidth(), "-") + "\n";
-        const _showed_configs_id = [0, 1, 2, 6];
-        const configs = this.config.filter((config) => {
-            return _showed_configs_id.includes(config.id);
-        }).map((config) => {
-            return `${config.name}: ${config.transformValue ? config.transformValue(config.value) : config.value}`;
-        });
+        text += "\n";
+        text += "-".repeat(CH.getWidth()) + "\n\n";
+        // text += CH.hcenter("System-Config", CH.getWidth(), "-") + "\n";
+        // const _showed_configs_id = [0, 1, 2, 6];
+        // const configs = this.config.filter((config) => {
+        //     return _showed_configs_id.includes(config.id);
+        // }).map((config) => {
+        //     return `${config.name}: ${config.transformValue ? config.transformValue(config.value) : config.value}`;
+        // });
 
-        text += "|" + CH.hcenter(configs.map((config) => {
-            return CH.hcenter(config, Math.floor(CH.getWidth() / config.length) - 1, " ");
-        }).join(" "), CH.getWidth() - 2) + "|\n";
+        // text += "|" + CH.hcenter(this.configs.map((config) => {
+        //     return CH.hcenter(config, Math.floor(CH.getWidth() / config.length) - 1, " ");
+        // }).join(" "), CH.getWidth() - 2) + "|\n";
 
         let nav = ["Back", "System Config", "Start Simulation"];
-        text += "|" + CH.hcenter(nav.map((nav, index) => {
+        text += CH.hcenter(nav.map((nav, index) => {
             return CH.hcenter(formatText(nav, this.rowIndex === -2 && this.optionsIndex === index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
-        }).join(" "), CH.getWidth() - 2) + "|\n";
+        }).join(" "), CH.getWidth()) + "\n\n";
 
-        text += "-".repeat(CH.getWidth()) + "\n";
+        
 
         const inputs = [
             {
@@ -84,17 +85,19 @@ class TaskScreen extends Scene {
             },
             {
                 value: `E`,
-                text: "Edit Task"
+                text: this.editingTask ? "Stop Editing" : "Edit Task"
             },
         ];
+        let inputText = "";
         const size = Math.floor((CH.getWidth() - 2) / inputs.length);
         for (let i = 0; i < inputs.length; i++) {
-            text += CH.hcenter(`${bold(inputs[i].value)}: ${inputs[i].text}`, size, " ", 1)
+            inputText += CH.hcenter(`${bold(inputs[i].value)}: ${CH.insert_color(Colors.LIGHTBLACK_EX, inputs[i].text)}`,
+                size)
             if (i < inputs.length - 1) {
-                text += " "
+                inputText += " "
             }
         }
-        text += "\n";
+        text += CH.hcenter(inputText) + "\n\n";
         text += CH.hcenter(genTaskTable(this.scheduler.startingTasks, slots, CH.getHeight() - 19, {
             col: this.editingTask ? this.colIndex + 1 : -1,
             row: this.rowIndex,
@@ -151,7 +154,7 @@ class TaskScreen extends Scene {
                 task.pinToCore = null; // If pinned to core 0 and decrement, unpin
             }
             else {
-                const maxCores = this.config.find(config => config.name === "Processors")?.value - 1|| 0;
+                const maxCores = this.config.find(config => config.name === "Processors")?.value - 1 || 0;
                 task.pinToCore += val;
                 if (task.pinToCore > maxCores) {
                     task.pinToCore = null; // If exceeds max cores, unpin
@@ -163,14 +166,12 @@ class TaskScreen extends Scene {
             task.color = (task.color + val) % 256;
         } else if (col === columns.periodic) {
 
-            if (task.deadline === null) {
-                return;
-            }
             if (!task.period) {
-                task.period = 1; // If no period, set it to 1
-            }
-            else if (task.period) {
                 task.period = 0;
+            }
+            task.period += val;
+            if (task.period < 0) {
+                task.period = 0; // Ensure period does not go below 0
             }
         }
     }
