@@ -5,7 +5,7 @@ import { Arrows, delta, enter } from '../Engine/Symbols.js';
 import { MsgBoxHandler } from '../Engine/messageBox.js';
 import Assets from '../Engine/Assets/Assets.js';
 import SceneAlias from './Alias.js';
-import { Scheduler } from '../Scheduler/Scheduler.js';
+import { TaskStates } from '../Scheduler/Scheduler.js';
 const Colors = DefaultColors;
 const CH = new BasicConsole();
 
@@ -19,9 +19,6 @@ const slots = [
   { name: "PIN", width: 5, getValue: (task) => task.pinToCore !== null ? "" + task.pinToCore : "---" },
   { name: "END", width: 5, getValue: (task) => task.completedTime !== null ? "" + task.completedTime : "---" },
   { name: "STATUS", width: 10, getValue: (task) => task.status },
-  { name: "TA", width: 3, getValue: (task) => task.turnAround !== null ? "" + task.turnAround : "---" },
-  { name: "RT", width: 3, getValue: (task) => task.responseTime !== null ? "" + task.responseTime : "---" },
-  { name: "WT", width: 3, getValue: (task) => task.waitingTime !== null ? "" + task.waitingTime : "---" },
 ]
 
 const tasksOption = [
@@ -65,14 +62,18 @@ class SimulationScreen extends Scene {
   play(play) {
     //start automatic simulation
     if (play) {
-      if (this.timer)
+      const autoTimeStep = this.config.find(o => o.name === "Auto Time Step")?.value || 0;
+
+      if (this.timer || autoTimeStep <= 0) 
         return;
       this.currentIndex = this.snapHistory.length - 1;
       this.timer = setInterval(() => {
         this.advanceTime();
         if (Math.random() < this.chanceOfNewTask) {
-          this.scheduler.addRandomTask();
-        }}, 100);
+          const tasksToAdd = this.config.find(o => o.name === "Tasks to be added")?.value || 1;
+          this.scheduler.addRandomTask(tasksToAdd);
+        }
+      }, autoTimeStep);
     }
     //stop automatic simulation
     else {
@@ -122,6 +123,7 @@ class SimulationScreen extends Scene {
       { key: "p", desc: this.timer ? "Pause" : "Resume" },
       { key: "a", desc: "Add rnd task" },
       { key: "q", desc: "Quit" },
+     { key: "r", desc: "Restart" },
       { key: enter, desc: "Inspect" },
       { key: Arrows.upDown + Arrows.leftRight, desc: "Navigate." },
     ]
@@ -150,9 +152,8 @@ class SimulationScreen extends Scene {
       console.log(this.getTasks(this.currentTaskIndex), this.getTasks(this.currentTaskIndex)[0].color);
       process.exit();
     }
-    const stats = []
-    const length = this.snapHistory[this.currentIndex].tasks.length;
-    stats.push ("+"+ CH.hcenter("TASKS: " + length, 16, "-") + "+")
+    let stats = []
+    
     const totalTA = this.snapHistory[this.currentIndex].tasks.reduce((acc, task) => {
       return acc + (task.turnAround !== null ? task.turnAround : 0);
     }, 0) 
@@ -162,14 +163,26 @@ class SimulationScreen extends Scene {
     const totalWT = this.snapHistory[this.currentIndex].tasks.reduce((acc, task) => {
       return acc + (task.waitingTime !== null ? task.waitingTime : 0);
     }, 0)
-    stats.push("AVG TA: " +  (totalTA/length).toFixed(2) + " t.u.");
-    stats.push("AVG RT: " +  (totalRT/length).toFixed(2) + " t.u.");
-    stats.push("AVG WT: " +  (totalWT/length).toFixed(2) + " t.u.");
-    // tasksSpr = CH.merge(
-    //   stats.join("\n"),
-    //   tasksSpr,
-    //   { padding: 0, align: "top" }
-    // )
+    const length = this.snapHistory[this.currentIndex].tasks.length;
+    stats.push("AVG TA: " +  (totalTA/length).toFixed(2));
+    stats.push("AVG RT: " +  (totalRT/length).toFixed(2) );
+    stats.push("AVG WT: " +  (totalWT/length).toFixed(2) );
+    stats.push("FAILED: " + this.snapHistory[this.currentIndex].tasks.filter(task => task.state === TaskStates.failed && task.deadline !== null).length);
+    stats.push("CTX SWITCH: " + this.snapHistory[this.currentIndex].contextSwitches);
+    stats.push("CORE MIG: " + this.snapHistory[this.currentIndex].tasksMigrations);
+    
+    stats.map((s, i) => {
+      stats[i] = "| " + CH.hcenter(s, 16, " ") + " | ";
+    })
+    
+    stats = ["+"+ CH.hcenter("TASKS: " + length, 18, "-") + "+", 
+      ...stats,
+     "+" + "-".repeat(16 + 2) + "+"];
+    tasksSpr = CH.merge(
+      stats.join("\n"),
+      tasksSpr,
+      { padding: 0, align: "top" }
+    )
     text += CH.hcenter(tasksSpr);
     text += "\n";
     return text;
@@ -274,6 +287,24 @@ class SimulationScreen extends Scene {
             this.play(oldplay);
         })
     }
+    else if (input === "r" ) {
+        const oldplay = this.timer !== null;
+      this.play(false);
+      MsgBoxHandler.getInstance().raise(
+        "Do you wish to restart the simulation?\nAll unsaved data will be lost.",
+        "Restart Simulation",
+        ["Yes", "No"],
+        (response) => {
+          if (response === 0)
+          {
+            this.onEnter();
+            this.play(oldplay);
+          }
+          else
+            this.play(oldplay);
+        })
+    }
+
   }
 }
 

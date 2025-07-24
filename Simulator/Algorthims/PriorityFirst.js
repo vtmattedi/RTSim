@@ -5,6 +5,7 @@ class PriorityFirst  extends SchedulerAlgorithms {
         super();
         this.name = "Priority First";
         this.shortName = "Priority";
+        this.description = "Tasks are scheduled based on their priority. Higher priority tasks are executed first. If two tasks have the same priority, the one that arrived first is executed first.";
     }
 
     sortTasks(tasks, t) {

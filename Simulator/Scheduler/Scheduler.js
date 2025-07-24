@@ -193,6 +193,10 @@ class Scheduler {
         this.contextSwitches = 0; // number of total context switches
         this.tasksMigrations = 0; // number of task migrations
         this.reduceTaskMigration = false; // flag to reduce task migrations
+        this.newTaskConfig = {
+            enablePinToCore: true, // Enable pinning tasks to cores
+            enableDeadTasks: false, // Enable tasks with deadlines greater than burst time
+        };
     }
     // Configures the scheduler with the provided configuration object.
     // if config is null or undefined, it throws an error.
@@ -205,6 +209,8 @@ class Scheduler {
             const value = config.find(item => item.name === name)?.value;
             return value !== undefined ? value : defaultValue;
         }
+        this.newTaskConfig.enablePinToCore = getValue("Enable core pinning", true); // Enable pinning tasks to cores
+        this.newTaskConfig.enableDeadTasks = getValue("Allow dead tasks", false); // Enable tasks with deadlines greater than burst time
         this.numProcessors = getValue("Processors", 1); // number of processors
         this.reduceTaskMigration = getValue("Reduce task migration", false); // flag to reduce task migrations
         this.lastValidTasks = [];
@@ -236,13 +242,21 @@ class Scheduler {
         task.status = TaskStates.ready;
         this.tasks.push(task);
     }
-    addRandomTask() {
-        const task = new Task(Math.round(Math.random() * 10 + 1), Math.round(Math.random() * 10 + 1), Math.random() > 0.5 ? null : Math.round(Math.random() * 10 + 1)); // Random burstTime between 1 and 10
-        if (Math.random() > 0.5) {
-            task.pinToCore = Math.floor(Math.random() * this.numProcessors); // Random core to pin to
+    addRandomTask(numTasks = 1) {
+        for (let i = 0; i < numTasks; i++) {
+            let deadline = Math.random() > 0.2 ? Math.round(Math.random() * 10 + 1) : null; // Random deadline between 1 and 10 or null
+            const burstTime = Math.round(Math.random() * 10 + 1); // Random burst time between 1 and 10
+            const priority = Math.round(Math.random() * 10 + 1); // Random priority between 1 and 10
+            if (this.newTaskConfig.enableDeadTasks && deadline !== null ) {
+                deadline += burstTime; // Ensure deadline is greater than burst time if enabled
+            }
+            const task = new Task(burstTime, priority, deadline);
+            if (Math.random() > 0.5 && this.newTaskConfig.enablePinToCore) {
+                task.pinToCore = Math.floor(Math.random() * this.numProcessors); // Random core to pin to
+            }
+            task.color = Math.round(Math.random() * 255);
+            this.addTask(task);
         }
-        task.color = Math.round(Math.random() * 255);
-        this.addTask(task);
     }
     getSnapshot() {
         // Create a deep copy of the tasks arrays
@@ -295,11 +309,11 @@ class Scheduler {
                     tasksThatAreNotOnPreferredCores.add(taskArray[i]);
                 }
             }
-            else{
+            else {
                 availableCores.add(i); // If the core is not occupied, we add it to the available cores set
             }
         }
-        
+
         // Now we have a set of available cores and tasks that are not on their preferred cores
         // We will try to assign the tasks that are not on their preferred cores to the available cores
 
@@ -334,11 +348,17 @@ class Scheduler {
         // pop tasks that are done
 
         this.tasks.forEach(task => {
-            task.checkTask(this.t); //check if the task is done or failed in the last tick 
-            if (task.remainingTime > 0 && task.status === TaskStates.running)
-                task.status = TaskStates.ready;
-            if (task.period && task.arrivalTime + task.period >= this.t) {
-                this.addTask(task);
+            if (task.status === TaskStates.completed || task.status === TaskStates.failed) {
+                ;
+            }
+            else {
+
+                task.checkTask(this.t); //check if the task is done or failed in the last tick 
+                if (task.remainingTime > 0 && task.status === TaskStates.running)
+                    task.status = TaskStates.ready;
+                if (task.period && task.arrivalTime + task.period >= this.t) {
+                    this.addTask(task);
+                }
             }
         }
         );

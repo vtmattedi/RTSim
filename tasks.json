@@ -1,72 +1,72 @@
 [
   {
-    "burstTime": 5,
-    "priority": 6,
-    "deadline": 7,
+    "burstTime": 7,
+    "priority": 8,
+    "deadline": 1,
     "pinToCore": null,
-    "color": "38;5;36"
+    "color": "38;5;211"
   },
   {
-    "burstTime": 5,
-    "priority": 11,
-    "deadline": 4,
+    "burstTime": 9,
+    "priority": 3,
+    "deadline": 11,
     "pinToCore": null,
-    "color": "38;5;200"
+    "color": "38;5;240"
   },
   {
-    "burstTime": 3,
-    "priority": 4,
-    "deadline": 8,
-    "pinToCore": null,
-    "color": "38;5;54"
-  },
-  {
-    "burstTime": 4,
-    "priority": 10,
+    "burstTime": 10,
+    "priority": 3,
     "deadline": null,
     "pinToCore": null,
-    "color": "38;5;150"
+    "color": "38;5;8"
   },
   {
-    "burstTime": 2,
-    "priority": 6,
-    "deadline": 7,
+    "burstTime": 5,
+    "priority": 1,
+    "deadline": null,
     "pinToCore": null,
-    "color": "38;5;87"
+    "color": "38;5;164"
   },
   {
     "burstTime": 7,
-    "priority": 5,
-    "deadline": null,
+    "priority": 6,
+    "deadline": 10,
     "pinToCore": null,
-    "color": "38;5;92"
+    "color": "38;5;130"
+  },
+  {
+    "burstTime": 2,
+    "priority": 9,
+    "deadline": 3,
+    "pinToCore": null,
+    "color": "38;5;157"
   },
   {
     "burstTime": 6,
-    "priority": 5,
-    "deadline": 2,
-    "pinToCore": null,
-    "color": "38;5;248"
-  },
-  {
-    "burstTime": 3,
     "priority": 9,
-    "deadline": 8,
-    "pinToCore": null,
-    "color": "38;5;110"
-  },
-  {
-    "burstTime": 5,
-    "priority": 10,
     "deadline": null,
     "pinToCore": null,
-    "color": "38;5;70"
+    "color": "38;5;82"
   },
   {
     "burstTime": 11,
-    "priority": 7,
-    "deadline": 7,
+    "priority": 3,
+    "deadline": 10,
     "pinToCore": null,
-    "color": "38;5;105"
+    "color": "38;5;147"
+  },
+  {
+    "burstTime": 5,
+    "priority": 5,
+    "deadline": null,
+    "pinToCore": null,
+    "color": "38;5;227"
+  },
+  {
+    "burstTime": 6,
+    "priority": 7,
+    "deadline": null,
+    "pinToCore": null,
+    "color": "38;5;41"
   }
 ]

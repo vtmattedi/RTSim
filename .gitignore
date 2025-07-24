@@ -2,3 +2,5 @@ node_modules/
 dist/
 pure.js
 *.log
+systemconfig.json
+tasks.json

@@ -15,7 +15,7 @@ import { InfoScreen } from './Scenes/InfoScreen.js';
 
 
 class Simulator {
-    #Version = "0.1.0";
+    #Version = "0.3.0";
     get Version() {
         return this.#Version;
     }
@@ -41,7 +41,7 @@ class Simulator {
             { id: 3, name: "Chance of new task", value: 1, min: 0, max: 100, step: 1, unit: "%", desc: "Chance of a new task being added to the system each time step." },
             { id: 4, name: "Tasks to be added", value: 1, min: 1, max: 100, step: 1, desc: "Number of tasks to be added to the system per time that a new task is added." },
             { id: 5, name: "Enable core pinning", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable random tasks to be born pinned to a core." },
-            { id: 6, name: "Auto Time Step", value: 50, min: 10, max: Infinity, step: 10, unit: "ms", desc: "Real time in between each automatic time step. You can play/pause the auto stepper also manually time step and check the state in the previous time at any time." },
+            { id: 6, name: "Auto Time Step", value: 50, min: 0, max: 5000, step: 10, unit: "ms", transformValue: (value) => { return `${value ? value : 'DISABLED'}` }, desc: "Real time in between each automatic time step. You can play/pause the auto stepper also manually time step and check the state in the previous time at any time." },
             { id: 7, name: "Allow dead tasks", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Allow tasks to be born with a deadline greater than their burst time." },
             { id: 8, name: "Reduce task migration", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable soft affinity for tasks, reducing the likelihood of migration between cores." },
         ]
