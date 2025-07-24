@@ -3,70 +3,61 @@
     "burstTime": 5,
     "priority": 7,
     "deadline": 10,
-    "pinToCore": null,
-    "color": "38;5;187"
+    "pinToCore": null
   },
   {
     "burstTime": 9,
     "priority": 9,
     "deadline": 5,
-    "pinToCore": null,
-    "color": "38;5;79"
+    "pinToCore": null
   },
   {
     "burstTime": 3,
     "priority": 4,
     "deadline": 9,
-    "pinToCore": null,
-    "color": "38;5;244"
+    "pinToCore": null
   },
   {
     "burstTime": 6,
     "priority": 9,
     "deadline": null,
-    "pinToCore": null,
-    "color": "38;5;32"
+    "pinToCore": null
   },
   {
     "burstTime": 6,
     "priority": 1,
     "deadline": 2,
-    "pinToCore": null,
-    "color": "38;5;135"
+    "pinToCore": null
   },
   {
     "burstTime": 1,
     "priority": 9,
     "deadline": 6,
-    "pinToCore": null,
-    "color": "38;5;135"
+    "pinToCore": null
   },
   {
     "burstTime": 10,
     "priority": 10,
     "deadline": 9,
-    "pinToCore": null,
-    "color": "38;5;229"
+    "pinToCore": null
   },
   {
     "burstTime": 9,
     "priority": 2,
     "deadline": 1,
-    "pinToCore": null,
-    "color": "38;5;5"
+    "pinToCore": null
   },
   {
     "burstTime": 9,
     "priority": 4,
     "deadline": null,
-    "pinToCore": null,
-    "color": "38;5;185"
+    "pinToCore": null
   },
   {
     "burstTime": 4,
     "priority": 2,
     "deadline": null,
-    "pinToCore": null,
-    "color": "38;5;45"
+    "period"
+    "pinToCore": null
   }
 ]

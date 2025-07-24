@@ -1,19 +1,32 @@
 import { DefaultColors, BasicConsole, ControlSequences } from "../Engine/ConsoleHelp.js";
 import { AlgoFactory, AlgorithmModels } from "../Algorthims/AlgoFactory.js";
 import { logger } from "../Engine/Logger.js";
-
+import { TaskStates, Task } from "./TaskStates.js";
 const CH = new BasicConsole();
 
-/**
- * Represents the various states a task can be in during its lifecycle.
- * Each state is associated with a specific color for visual representation.
- */
-class TaskStates {
-    static ready = CH.insert_color(DefaultColors.GREEN, 'READY');
-    static running = CH.insert_color(DefaultColors.YELLOW, 'RUNNING');
-    static failed = CH.insert_color(DefaultColors.RED, 'FAILED');
-    static completed = CH.insert_color(DefaultColors.BLUE, 'COMPLETED');
+class SoftAffinityController {
+    constructor() {
+        this.softAffinity = {}; // Map to store soft core affinities
+    }
+    #getKey(task) {
+        const instance = task.instance ? task.instance : 0; // Use instance number if available, otherwise default to 0
+        return `${task.id}#${instance}`; // Unique key for the task based on ID and instance
+    }
+    setAffinity(task, coreId) {
+        if (task instanceof Task === false) {
+            logger.error("Task is not an instance of Task class");
+        }
+        if (coreId < 0 || coreId >= this.numProcessors) {
+            logger.error(`Invalid core ID: ${coreId}. Must be between 0 and ${this.numProcessors - 1}.`);
+            return;
+        }
+        this.softAffinity[this.#getKey(task)] = coreId; // Set the core affinity for the task
+    }
+    getAffinity(task) {
+        return this.softAffinity[this.#getKey(task)] || undefined; // Return the core affinity for the task or undefined if not set
+    }
 }
+
 
 /**
  * Represents a snapshot of the scheduler's state at a specific point in time.
@@ -43,141 +56,6 @@ class SchedulerSnapshot {
     }
 }
 
-/**
- * Represents a Task in a scheduling simulation.
- */
-class Task {
-    /**
-     * Creates a new Task instance.
-     * @param {number} burstTime - The burst time of the task in time units.
-     * @param {number} [priority=0] - The priority of the task (0 is the highest priority).
-     * @param {number|null} [deadline=null] - The deadline of the task in time units, or null if no deadline.
-     * @param {number|null} [pinToCore=null] - The core to which the task is pinned, or null if no pinning.
-     */
-    constructor(burstTime, priority = 0, deadline = null, pinToCore = null) {
-        this.id = null;
-        this.burstTime = burstTime; // in time units
-        this.remainingTime = burstTime;
-        this.arrivalTime = null;
-        this.completedTime = null;
-        this.turnAround = null; // in time units, null if not completed
-        this.responseTime = null; // in time units, null if not yet started
-        this.waitingTime = null; // in time units, null if not yet started
-        this.priority = priority; // 0 is the highest priority
-        this.deadline = deadline; // in time units, null if no deadline
-        this.pinToCore = pinToCore; // null if no pinning
-        this.status = "CREATED"; // ready, running, completed
-        this.color = 0;// 8bit number for ANSI color using COLOR.custom_colors()
-        this.period = null; // 0 or null if no periodicity
-    }
-
-    /**
-     * Assigns an ID to the task.
-     * @param {number} id - The unique identifier for the task.
-     */
-    assignId(id) {
-        this.id = id;
-    }
-
-    /**
-     * Checks the task's status and updates it if completed.
-     * @param {number} t - The current time in the simulation.
-     */
-    checkTask(t) {
-        if (this.remainingTime <= 0 && this.status !== TaskStates.completed) {
-            this.status = TaskStates.completed;
-            this.completedTime = t;
-            this.turnAround = t - this.arrivalTime; // set turn around time to the time it completed
-            this.waitingTime = this.turnAround - this.burstTime; // set waiting time to the time it completed - burst time
-
-        }
-        this.checkDeadline(t);
-
-    }
-    /**
-     * Checks if the task has missed its deadline.
-     * @param {number} t - The current time in the simulation.
-     * @returns {boolean} - Returns true if the deadline is not missed, false otherwise.
-     */
-    checkDeadline(t) {
-        if (this.deadline && this.remainingTime > 0 && t >= this.arrivalTime + this.deadline && this.status !== TaskStates.failed) {
-            this.status = TaskStates.failed;
-            this.completedTime = t; // set remaining time to 0 to mark it as completed
-            return false; // deadline missed
-        }
-        return true; // deadline not missed
-    }
-    /**
-     * Simulates the passage of one time unit for the task.
-     * Updates response time and decrements remaining time if applicable.
-     * @param {number} t - The current time in the simulation.
-     */
-    tick(t) {
-        if (this.responseTime === null) {
-            this.responseTime = t - this.arrivalTime; // set response time to the time it started running
-        }
-        if (this.remainingTime > 0) {
-            this.remainingTime -= 1;
-        }
-    }
-    /**
-    * Sets the display format for the task.
-    * @param {Object} format - The format object containing color, background, and character properties.
-    */
-    setFormat(format) {
-        this.format = format;
-    }
-    /**
-     * Resets the task's timers and status to their initial state.
-     * @static
-     * @param {Task} task - The task instance to reset.
-     */
-    static resetTimers(task) {
-        task.remainingTime = task.burstTime;
-        task.completedTime = null;
-        task.turnAround = null; // in time units, null if not completed
-        task.responseTime = null; // in time units, null if not yet started
-        task.arrivalTime = null;
-        task.waitingTime = null;
-    }
-    /**
-     * Generates a visual representation of the task as a line.
-     * @static
-     * @param {Task} task - The task instance to generate the line for.
-     * @param {number} [size=1] - The size of the line to generate.
-     * @returns {string} - The generated line representation of the task.
-     */
-    static getLine(task, size = 1) {
-        let line = "";//task.format.char.repeat(size);
-        line = " ".repeat(size);
-        line = CH.insert_color(DefaultColors.custom_colors(task.color ? task.color : 255, true), line);
-
-        // console.log(line)
-        // console.log(task.format.color.replace("38","48"), line.replace(" ", "+").replace(ControlSequences.CSI, "ESC"));
-        // throw new Error("Debugging");
-        // if (task.format.background) {
-        //     line = CH.insert_color(task.format.background, line);
-        // }
-        return line;
-
-    }
-
-    /**
-     * Creates a new Task instance based on the provided task.
-     *
-     * @param {Task} task - The task to clone. Must be an instance of the Task class.
-     * @returns {Task|null} A new Task instance with the same properties as the input task,
-     *                      or null if the input is not an instance of Task.
-     */
-    static fromTask(task) {
-        if (!(task instanceof Task))
-            return null;
-
-        let newTask = new Task(task.burstTime, task.priority, task.deadline, task.pinToCore);
-        newTask.color = task.color;
-        return newTask;
-    }
-}
 
 class Scheduler {
     #taskIDs = 0;
@@ -189,7 +67,7 @@ class Scheduler {
         this.lastValidTasks = [];
         this.model = AlgoFactory.createAlgorithm(AlgorithmModels.SJF, { timeQuantum: 1 }); // Default algorithm
         this.t = 0; // initial time in time units
-        this.softAffinity = {}; // Map to store soft core affinities
+        this.softAffinity = new SoftAffinityController(); // controller for soft core affinities
         this.contextSwitches = 0; // number of total context switches
         this.tasksMigrations = 0; // number of task migrations
         this.reduceTaskMigration = false; // flag to reduce task migrations
@@ -283,9 +161,6 @@ class Scheduler {
 
         const availableCores = new Set();
         const tasksThatAreNotOnPreferredCores = new Set();
-        logger.log(`Minimizing task migrations for ${taskArray.length} tasks on ${this.numProcessors} cores.`);
-        logger.log(`Current Tasks: ${taskArray.map(task => task ? `${task.id}:{${task.pinToCore}}` : 'null').join(', ')}`);
-        logger.log(`Soft Affinity: ${JSON.stringify(this.softAffinity)}`);
         // Iterate through the taskArray to find tasks that are not on their preferred cores
         for (let i = 0; i < taskArray.length; i++) {
             if (taskArray[i] !== null) {
@@ -293,11 +168,11 @@ class Scheduler {
                 if (taskArray[i].pinToCore !== null) continue;
                 // If the task is not pinned to a core, we check if it is running on its preferred core
                 // I.E. the last core it was running on
-                if (this.softAffinity[taskArray[i].id] !== undefined) {
+                if (this.softAffinity.getAffinity(taskArray[i]) !== undefined) {
                     // Check if the task is running on its preferred core
                     // If it is not running on its preferred core, 
                     // we add it to the available cores set
-                    if (this.softAffinity[taskArray[i].id] !== i) {
+                    if (this.softAffinity.getAffinity(taskArray[i]) !== i) {
                         availableCores.add(i);
                         tasksThatAreNotOnPreferredCores.add(taskArray[i]);
                     }
@@ -318,7 +193,7 @@ class Scheduler {
         // We will try to assign the tasks that are not on their preferred cores to the available cores
 
         for (const task of tasksThatAreNotOnPreferredCores) {
-            const preferredCore = this.softAffinity[task.id];
+            const preferredCore = this.softAffinity.getAffinity(task);
             if (preferredCore === undefined) {
                 // If the task has no preferred core, we skip it
                 continue;
@@ -344,12 +219,28 @@ class Scheduler {
         return taskArray;
     }
 
+    rearm(task){
+        if (task instanceof Task === false) {
+            logger.error("Task is not an instance of Task class");
+        }
+
+        const _task = Task.fromTask(task);
+        _task.assignId(task.id); // reassign the ID to the new task
+        _task.instance = task.instance ? task.instance + 1 : 1; // increment the instance number
+        _task.arrivalTime = this.t;
+        Task.resetTimers(_task);
+        _task.status = TaskStates.ready; // set the status to ready
+        this.tasks.push(_task); // add the new task to the tasks array
+    }
+
     tick() {
         // pop tasks that are done
 
         this.tasks.forEach(task => {
             if (task.status === TaskStates.completed || task.status === TaskStates.failed) {
-                ;
+                if (task.period && task.arrivalTime + task.period < this.t) {
+                    this.rearm(task); // rearm the task if it is periodic
+                }
             }
             else {
 
@@ -457,13 +348,13 @@ class Scheduler {
                 continue; // skip if the core is not occupied
             }
             // If the core is diferent from the previous core, we increment the task migrations
-            if (this.softAffinity[nextTasks[i].id] !== i) {
+            if (this.softAffinity.getAffinity(nextTasks[i]) !== i) {
                 // If the task was running on a different core, we increment the task migrations
-                if (this.softAffinity[nextTasks[i].id] !== undefined) {
+                if (this.softAffinity.getAffinity(nextTasks[i]) !== undefined) {
                     this.tasksMigrations += 1; // increment task migrations
                     logger.log(`Task ${nextTasks[i].id} migrated to core ${i}`);
                 }
-                this.softAffinity[nextTasks[i].id] = i; // set the thread affinity for the task
+                this.softAffinity.setAffinity(nextTasks[i], i); // set the thread affinity for the task
                 logger.log(`Task ${nextTasks[i].id} set affinity to core ${i}`);
             }
 
