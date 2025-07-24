@@ -10,7 +10,7 @@ const Colors = DefaultColors;
 const CH = new BasicConsole();
 
 const slots = [
-  { name: "TASKS", width: 9, getValue: (task) => {return CH.hcenter("ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + task.id), 9, " ", 1) }},
+  { name: "TASKS", width: 9, getValue: (task) => { return CH.hcenter("ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + task.id), 9, " ", 1) } },
   { name: "REM", width: 5, getValue: (task) => "" + task.remainingTime },
   { name: "BURST", width: 5, getValue: (task) => "" + task.burstTime },
   { name: "ARR", width: 5, getValue: (task) => "" + task.arrivalTime },
@@ -64,7 +64,7 @@ class SimulationScreen extends Scene {
     if (play) {
       const autoTimeStep = this.config.find(o => o.name === "Auto Time Step")?.value || 0;
 
-      if (this.timer || autoTimeStep <= 0) 
+      if (this.timer || autoTimeStep <= 0)
         return;
       this.currentIndex = this.snapHistory.length - 1;
       this.timer = setInterval(() => {
@@ -112,7 +112,7 @@ class SimulationScreen extends Scene {
     let line = delta + "t = " + CH.hcenter("" + this.snapHistory[this.currentIndex].t, 7, "-", "left");
     line += this.currentIndex === this.snapHistory.length - 1 ? live : "-".repeat(6);
     line += this.timer ? auto : manual;
-    line = CH.hcenter("Model: " + this.snapHistory[this.currentIndex].model, CH.getWidth()/4, "-") + line;
+    line = CH.hcenter("Model: " + this.snapHistory[this.currentIndex].model, CH.getWidth() / 4, "-") + line;
     text += CH.hcenter(line, CH.getWidth(), "-") + "\n";
     text += genProcessorsFrame(this.snapHistory, this.currentIndex);
     text = text.split("\n").slice(0, -1);
@@ -123,7 +123,7 @@ class SimulationScreen extends Scene {
       { key: "p", desc: this.timer ? "Pause" : "Resume" },
       { key: "a", desc: "Add rnd task" },
       { key: "q", desc: "Quit" },
-     { key: "r", desc: "Restart" },
+      { key: "r", desc: "Restart" },
       { key: enter, desc: "Inspect" },
       { key: Arrows.upDown + Arrows.leftRight, desc: "Navigate." },
     ]
@@ -148,15 +148,12 @@ class SimulationScreen extends Scene {
       const t_size = CH.getSize(t);
       tasksSpr = CH.merge(tasksSpr, CH.hcenter(t, t_size.width), { padding: 4 })
     }
-    if (this.getTasks(this.currentTaskIndex).length > Infinity) {
-      console.log(this.getTasks(this.currentTaskIndex), this.getTasks(this.currentTaskIndex)[0].color);
-      process.exit();
-    }
+
     let stats = []
-    
+
     const totalTA = this.snapHistory[this.currentIndex].tasks.reduce((acc, task) => {
       return acc + (task.turnAround !== null ? task.turnAround : 0);
-    }, 0) 
+    }, 0)
     const totalRT = this.snapHistory[this.currentIndex].tasks.reduce((acc, task) => {
       return acc + (task.responseTime !== null ? task.responseTime : 0);
     }, 0)
@@ -164,25 +161,28 @@ class SimulationScreen extends Scene {
       return acc + (task.waitingTime !== null ? task.waitingTime : 0);
     }, 0)
     const length = this.snapHistory[this.currentIndex].tasks.length;
-    stats.push("AVG TA: " +  (totalTA/length).toFixed(2));
-    stats.push("AVG RT: " +  (totalRT/length).toFixed(2) );
-    stats.push("AVG WT: " +  (totalWT/length).toFixed(2) );
+    stats.push("AVG TA: " + (totalTA / length).toFixed(2));
+    stats.push("AVG RT: " + (totalRT / length).toFixed(2));
+    stats.push("AVG WT: " + (totalWT / length).toFixed(2));
     stats.push("FAILED: " + this.snapHistory[this.currentIndex].tasks.filter(task => task.state === TaskStates.failed && task.deadline !== null).length);
     stats.push("CTX SWITCH: " + this.snapHistory[this.currentIndex].contextSwitches);
     stats.push("CORE MIG: " + this.snapHistory[this.currentIndex].tasksMigrations);
-    
+
     stats.map((s, i) => {
       stats[i] = "| " + CH.hcenter(s, 16, " ") + " | ";
     })
-    
-    stats = ["+"+ CH.hcenter("TASKS: " + length, 18, "-") + "+", 
-      ...stats,
-     "+" + "-".repeat(16 + 2) + "+"];
-    tasksSpr = CH.merge(
-      stats.join("\n"),
-      tasksSpr,
-      { padding: 0, align: "top" }
-    )
+
+    stats = ["+" + CH.hcenter("TASKS: " + length, 18, "-") + "+",
+    ...stats,
+    "+" + "-".repeat(16 + 2) + "+"];
+
+    if (this.selTaskIndex !== -1) {
+      tasksSpr = CH.merge(
+        stats.join("\n"),
+        tasksSpr,
+        { padding: 4, align: "top" }
+      )
+    }
     text += CH.hcenter(tasksSpr);
     text += "\n";
     return text;
@@ -224,7 +224,7 @@ class SimulationScreen extends Scene {
       }
       if (this.selTaskIndex >= 0)
         this.trackedTaskId = this.getTasks(this.currentTaskIndex)[this.selTaskIndex]?.id;
-      else 
+      else
         this.trackedTaskId = null;
     }
     else if (input === "arrowdown") {
@@ -287,18 +287,18 @@ class SimulationScreen extends Scene {
             this.play(oldplay);
         })
     }
-    else if (input === "r" ) {
-        const oldplay = this.timer !== null;
+    else if (input === "r") {
+      const oldplay = this.timer !== null;
       this.play(false);
       MsgBoxHandler.getInstance().raise(
         "Do you wish to restart the simulation?\nAll unsaved data will be lost.",
         "Restart Simulation",
         ["Yes", "No"],
         (response) => {
-          if (response === 0)
-          {
+          if (response === 0) {
             this.onEnter();
-            this.play(oldplay);
+            if (!oldplay)
+              this.play(false); // If it was not playing, we don't want to start it again
           }
           else
             this.play(oldplay);
