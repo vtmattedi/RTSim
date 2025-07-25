@@ -11,74 +11,74 @@ const Colors = DefaultColors;
 const CH = new BasicConsole();
 
 const pass = [
-        {
-            "burstTime": 1,
-            "priority": 4,
-            "deadline": 5,
-            "pinToCore": null,
-            "period": 5,
-            "color": 120
-        },
-        {
-            "burstTime": 1,
-            "priority": 3,
-            "deadline": 10,
-            "pinToCore": null,
-            "period": 10,
-            "color": 200
-        },
-        {
-            "burstTime": 2,
-            "priority": 2,
-            "deadline": 20,
-            "pinToCore": null,
-            "period": 20,
-            "color": 60
-        },
-        {
-            "burstTime": 3,
-            "priority": 1,
-            "deadline": 40,
-            "pinToCore": null,
-            "period": 40,
-            "color": 180
-        }
-    ];
+    {
+        "burstTime": 1,
+        "priority": 4,
+        "deadline": 5,
+        "pinToCore": null,
+        "period": 5,
+        "color": 120
+    },
+    {
+        "burstTime": 1,
+        "priority": 3,
+        "deadline": 10,
+        "pinToCore": null,
+        "period": 10,
+        "color": 200
+    },
+    {
+        "burstTime": 2,
+        "priority": 2,
+        "deadline": 20,
+        "pinToCore": null,
+        "period": 20,
+        "color": 60
+    },
+    {
+        "burstTime": 3,
+        "priority": 1,
+        "deadline": 40,
+        "pinToCore": null,
+        "period": 40,
+        "color": 180
+    }
+];
 
 const failed = [
-        {
-            "burstTime": 4,
-            "priority": 1,
-            "deadline": 5,
-            "pinToCore": null,
-            "period": 5,
-            "color": 120
-        },
-        {
-            "burstTime": 3,
-            "priority": 2,
-            "deadline": 6,
-            "pinToCore": null,
-            "period": 6,
-            "color": 180
-        },
-        {
-            "burstTime": 2,
-            "priority": 3,
-            "deadline": 6,
-            "pinToCore": null,
-            "period": 6,
-            "color": 220
-        },
-        {
-            "burstTime": 3,
-            "priority": 4,
-            "deadline": 7,
-            "pinToCore": null,
-            "period": 7,
-            "color": 60
-        }
-    ];
+    {
+        "burstTime": 4,
+        "priority": 1,
+        "deadline": 5,
+        "pinToCore": null,
+        "period": 5,
+        "color": 120
+    },
+    {
+        "burstTime": 3,
+        "priority": 2,
+        "deadline": 6,
+        "pinToCore": null,
+        "period": 6,
+        "color": 180
+    },
+    {
+        "burstTime": 2,
+        "priority": 3,
+        "deadline": 6,
+        "pinToCore": null,
+        "period": 6,
+        "color": 220
+    },
+    {
+        "burstTime": 3,
+        "priority": 4,
+        "deadline": 7,
+        "pinToCore": null,
+        "period": 7,
+        "color": 60
+    }
+];
 
 
 const slots = [
@@ -145,7 +145,16 @@ class TaskScreen extends Scene {
             return CH.hcenter(formatText(nav, this.rowIndex === -2 && this.optionsIndex === index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
         }).join(" "), CH.getWidth()) + "\n\n";
 
-
+        const presets = [
+            {
+                value: `1`,
+                text: "preset: pass tasks",
+            },
+            {
+                value: `2`,
+                text: "preset: fail tasks"
+            }
+        ]
 
         const inputs = [
             {
@@ -159,15 +168,8 @@ class TaskScreen extends Scene {
             {
                 value: `e or ${enter}`,
                 text: this.editingTask ? "Stop Editing" : "Edit Task"
-            },
-            {
-                value: `1`,
-                text: "preset: pass tasks",
-            },
-            {
-                value: `2`,
-                text: "preset: fail tasks"
             }
+
         ];
         let inputText = "";
         const size = Math.floor((CH.getWidth() - 2) / inputs.length);
@@ -178,7 +180,14 @@ class TaskScreen extends Scene {
                 inputText += " "
             }
         }
-
+        let presetText = "";
+        for (let i = 0; i < presets.length; i++) {
+            presetText += CH.hcenter(`${bold(presets[i].value)}: ${CH.insert_color(Colors.LIGHTBLACK_EX, presets[i].text)}`,
+                size)
+            if (i < presets.length - 1) {
+                presetText += " "
+            }
+        }
         const n = this.scheduler.startingTasks.filter(task => task.period > 0).length;
         const lub = n * (Math.pow(2, 1 / n) - 1);
         const utilization = this.scheduler.startingTasks.reduce((sum, task) => {
@@ -187,7 +196,8 @@ class TaskScreen extends Scene {
         }, 0);
         const color = utilization > lub ? Colors.RED : Colors.GREEN;
         const ll = `(\x1b[4mOnly of Periodic Tasks\x1b[0m) \x1b[3mLiu & Layland\x1b[0m (\x1b[4mSingle Core\x1b[0m): U = ${CH.insert_color(color, utilization.toFixed(4))} |  LUB = ${lub.toFixed(4)}`;
-        text += CH.hcenter(inputText) + "\n\n";
+        text += CH.hcenter(inputText) + "\n";
+        text += CH.hcenter(presetText) + "\n\n";
         text += CH.hcenter(ll) + "\n";
         text += CH.hcenter(genTaskTable(this.scheduler.startingTasks, slots, CH.getHeight() - 19, {
             col: this.editingTask ? this.colIndex + 1 : -1,
