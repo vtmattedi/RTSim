@@ -86,7 +86,7 @@ class TaskScreen extends Scene {
                 text: "Delete Task"
             },
             {
-                value: `E`,
+                value: `e or ${Arrows.enter}`,
                 text: this.editingTask ? "Stop Editing" : "Edit Task"
             },
         ];
@@ -187,7 +187,7 @@ class TaskScreen extends Scene {
             return "-1"
         }
         if (input === "enter" || input === "space") {
-            if (!this.editingTask && this.rowIndex >= 0) {
+            if (this.rowIndex >= 0) {
                 this.editingTask = !this.editingTask;
             }
             if (this.rowIndex === -2) {
