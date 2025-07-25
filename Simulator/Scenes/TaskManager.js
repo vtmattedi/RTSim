@@ -160,6 +160,14 @@ class TaskScreen extends Scene {
                 value: `e or ${enter}`,
                 text: this.editingTask ? "Stop Editing" : "Edit Task"
             },
+            {
+                value: `1`,
+                text: "pass tasks",
+            },
+            {
+                value: `2`,
+                text: "fail tasks"
+            }
         ];
         let inputText = "";
         const size = Math.floor((CH.getWidth() - 2) / inputs.length);
@@ -272,20 +280,17 @@ class TaskScreen extends Scene {
                 this.editingTask = !this.editingTask;
             }
             logger.log(`opt: ${this.optionsIndex}`);
-            let a = 0;
             if (this.rowIndex === -2) {
                 if (this.optionsIndex === 0) {
-                    a -1;
+                    return -1;
                 }
                 if (this.optionsIndex === 1) {
-                    a = SceneAlias.systemMenu;
+                    return SceneAlias.systemMenu;
                 }
                 if (this.optionsIndex === 2) {
-                    a = SceneAlias.simulationScreen;
+                    return SceneAlias.simulationScreen;
                 }
             }
-            logger.log(`Going to scene: ${a}`);
-            return a;
         }
         if (input === "a") {
             for (let i = 0; i < 1 + 9 * modifiers.shift; i++) {
