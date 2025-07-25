@@ -5,6 +5,7 @@ import { FCFSAlgorithm } from "./FCFS.js";
 import { PriorityFirst } from "./PriorityFirst.js";
 import { RoundRobin } from "./RoundRobin.js";
 import { SJFAlgorithm } from "./SJF.js";
+import { PriorityRR } from "./ProrityRR.js";
 class AlgorithmModels {
     static get FCFS () { return 0} 
     static get RR () {return 1}
@@ -12,7 +13,9 @@ class AlgorithmModels {
     static get Priority () {return 3}
     static get SJF () {return 4} 
     static get HRRN () {return 5}
-    static get length () { return 6}
+    static get PriorityRR () { return 6}
+    static get length () { return 7}
+
     static getName (type) {
         switch (type) {
             case AlgorithmModels.FCFS:
@@ -28,6 +31,8 @@ class AlgorithmModels {
                 return "SJF";
             case AlgorithmModels.HRRN:
                 return "HRRN";
+            case AlgorithmModels.PriorityRR:
+                return "PriorityRR";
             default:
                 throw new Error(`Unknown algorithm type: ${type}`);
         }
@@ -54,7 +59,6 @@ class AlgoFactory {
             return new PriorityFirst();
         }
         if (type === AlgorithmModels.RR) {
-
             return new RoundRobin(options?.timeQuantum);
         }
         if (type === AlgorithmModels.SJF) {
@@ -62,6 +66,9 @@ class AlgoFactory {
         }
         if (type === AlgorithmModels.HRRN) {
             return new HRRNAlgorithm();
+        }
+        if (type === AlgorithmModels.PriorityRR) {
+            return new PriorityRR(options?.timeQuantum);
         }
         throw new Error(`Unknown algorithm type: ${type}`);
     }

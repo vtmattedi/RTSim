@@ -9,7 +9,7 @@
     },
     {
       "name": "Scheduler Algorithm",
-      "value": 3
+      "value": 6
     },
     {
       "name": "Time Quantum",
@@ -26,6 +26,10 @@
     {
       "name": "Enable core pinning",
       "value": false
+    },
+    {
+      "name": "Max Burst Time",
+      "value": 10
     },
     {
       "name": "Auto Time Step",

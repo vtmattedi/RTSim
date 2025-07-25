@@ -6,12 +6,13 @@ import { MsgBoxHandler } from '../Engine/messageBox.js';
 import Assets from '../Engine/Assets/Assets.js';
 import SceneAlias from './Alias.js';
 import { TaskStates } from '../Scheduler/Scheduler.js';
+import { logger } from '../Engine/Logger.js';
 const Colors = DefaultColors;
 const CH = new BasicConsole();
 
 const fmt_task = (task) => {
   const instance = task.instance ? task.instance : 0; // Use instance number if available, otherwise default to 0
-  const key=  `${task.id}#${instance}`;
+  const key = task.period > 0 ? `${task.id}#${instance}` : `${task.id}`;
   return CH.hcenter("ID: " + CH.insert_color(Colors.custom_colors(task.color), "" + key), 9, " ", 1)
 }
 const slots = [
@@ -32,7 +33,7 @@ const tasksOption = [
   { title: "All Tasks", desc: "These are all the tasks that has passed by the scheduler." },
   { title: "Finished Tasks", desc: "These are the tasks that have been completed or failed (missed deadline)." },
   { title: "Recently Finished Tasks", desc: "These are the tasks that are have completed or failed (missed deadline) in the last 20 time units." },
-
+  { title: "Current Task + Recently Finished Tasks", desc: "These are the tasks that are currently being processed by the scheduler, and the tasks that have completed or failed (missed deadline) in the last 20 time slices." },
 ]
 class SimulationScreen extends Scene {
   constructor(scheduler, config) {
@@ -41,21 +42,21 @@ class SimulationScreen extends Scene {
     this.scheduler = scheduler;
     this.snapHistory = [];
     this.timer = null;
-    this.chanceOfNewTask = config.find(o => o.name === "Chance of new task")?.value * 0.01 || 0;
-    this.currentIndex = 0;
+    this.chanceOfNewTask = 0;
+    this.currentIndex = 0; 
     this.selTaskIndex = -2;
-    this.currentTaskIndex = 0;
+    this.currentTaskIndex = 0; /// Start with the last option (Current Task + Recently Finished Tasks)
     this.trackedTaskId = null;
-
+    
   }
   onEnter() {
     this.scheduler.configure(this.config);
+    this.chanceOfNewTask = this.config.find(o => o.name === "Chance of new task")?.value * 0.01 || 0;
     delete this.snapHistory;
     this.snapHistory = []
     this.snapHistory.push(this.scheduler.getSnapshot());
-    this.currentIndex = 0;
     this.selTaskIndex = -2;
-    this.currentTaskIndex = 0;
+    this.currentTaskIndex = 4;
     this.trackedTaskId = null;
     this.play(true);
   };
@@ -107,6 +108,12 @@ class SimulationScreen extends Scene {
       return this.snapHistory[this.currentIndex].tasks.filter(task => task.completedTime !== null)
     if (index === 3)
       return this.snapHistory[this.currentIndex].tasks.filter(task => task.completedTime !== null && task.completedTime >= this.snapHistory[this.currentIndex].t - 20)
+    if (index === 4) {
+      return this.snapHistory[this.currentIndex].tasks
+        .filter(task => task.completedTime !== null && task.completedTime >= this.snapHistory[this.currentIndex].t - 20)
+        .concat(this.snapHistory[this.currentIndex].validTasks)
+    }
+
   }
   draw() {
     let text = CH.getFigLet("Simulation");

@@ -18,6 +18,13 @@ class MsgBoxMessage {
     }
 }
 
+class AnimStage {
+    static get OPENING() { return 1; }
+    static get OPEN() { return 2; }
+    static get CLOSING() { return 3; }
+    static get CLOSED() { return 0; }
+}
+
 /**
  * Creates a formatted message box with a title, text content, and optional selectable options.
  *
@@ -162,7 +169,7 @@ class MsgBoxHandler {
         this.animation = null;
         this.animation_ms = 20;
         this.animIndex = 0;
-        this.state = 0;// 0 - closed, 1 - opening, 2 - open, 3 - closing
+        this.state = AnimStage.CLOSED;
         this.setAnimation(true);
     }
     get open() {
@@ -173,7 +180,7 @@ class MsgBoxHandler {
         if (this.#open)
             return; // If already open, do nothing
         this.#open = true;
-        this.state = 1;
+        this.state = AnimStage.OPENING;
         this.animIndex = 0;
     }
 
@@ -187,22 +194,22 @@ class MsgBoxHandler {
     setAnimation(val) {
         if (val && !this.animation) {
             this.animation = setInterval(() => {
-                if (this.state === 0)
+                if (this.state === AnimStage.CLOSED)
                     return; // If closed, do nothing
-                if (this.state === 1) {
+                if (this.state === AnimStage.OPENING) {
                     this.animIndex += 1;
                     if (this.animIndex >= 30) {
-                        this.state = 2;
+                        this.state = AnimStage.OPEN;
                         this.animIndex = 0;
                     }
                 }
-                else if (this.state === 2) {
+                else if (this.state === AnimStage.OPEN) {
                     return; // Already open, do nothing
                 }
-                else if (this.state === 3) {
+                else if (this.state === AnimStage.CLOSING) {
                     this.animIndex -= 1;
                     if (this.animIndex <= 0) {
-                        this.state = 0;
+                        this.state = AnimStage.CLOSED;
                         this.animIndex = 0;
                         this.closeBox();
                         if (typeof this.onSelect === "function") {
@@ -245,27 +252,34 @@ class MsgBoxHandler {
             }
         } else if (input === 0 && this.select >= 0) {
 
-            if (typeof this.onSelect === "function") {
-                this.onSelect(this.select);
-            }
+
             if (this.useAnimation) {
-                this.state = 3;
-                this.animIndex = 15;
-                return;
+                if (this.state === AnimStage.OPEN) {
+                    this.state = AnimStage.CLOSING;
+                    this.animIndex = 15;
+                    if (typeof this.onSelect === "function") {
+                        this.onSelect(this.select);
+                    }
+                }
             }
-            this.closeBox();
+            else {
+                if (typeof this.onSelect === "function") {
+                    this.onSelect(this.select);
+                }
+                this.closeBox();
+            }
         }
 
     }
 
-    internal(){
+    internal() {
 
     }
 
     /*
     Internal function to handle message box updates.
     */
-    onEnd(){
+    onEnd() {
         if (this.queue.length > 0) {
             const msg = this.queue.shift();
             this.raise(msg.text, msg.title, msg.options, msg.onSelect);
@@ -280,7 +294,7 @@ class MsgBoxHandler {
         if (Array.isArray(options) && options.length > 0) {
             this.options = options;
         } else {
-            options = ["OK"];
+            this.options = ["OK"];
         }
         this.onSelect = onSelect;
         this.openBox();

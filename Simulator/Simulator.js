@@ -53,7 +53,7 @@ class Simulator {
         this.firstChar = true;
         if (startingTasks && Array.isArray(startingTasks)) {
             this.scheduler.startingTasks = startingTasks;
-
+            this.io.fileLoaded = true;
         }
         else {
             for (let i = 0; i < 10; i++) {

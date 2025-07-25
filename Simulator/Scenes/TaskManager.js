@@ -5,6 +5,8 @@ import Assets from '../Engine/Assets/Assets.js';
 import { Arrows, delta } from '../Engine/Symbols.js';
 import { Task } from '../Scheduler/Scheduler.js';
 import SceneAlias from './Alias.js';
+import { MsgBoxHandler } from '../Engine/messageBox.js';
+import { logger } from '../Engine/Logger.js';
 const Colors = DefaultColors;
 const CH = new BasicConsole();
 
@@ -72,7 +74,7 @@ class TaskScreen extends Scene {
             return CH.hcenter(formatText(nav, this.rowIndex === -2 && this.optionsIndex === index, true), Math.floor(CH.getWidth() / nav.length) - 1, " ");
         }).join(" "), CH.getWidth()) + "\n\n";
 
-        
+
 
         const inputs = [
             {
@@ -223,6 +225,20 @@ class TaskScreen extends Scene {
             else if (this.editingTask) {
                 this.editingTask = false;
             }
+        }
+        if (input === "d") {
+            if (this.rowIndex >= 0 && this.scheduler.startingTasks.length > 0) {
+                const task = this.scheduler.startingTasks[this.rowIndex];
+                const taskId = CH.insert_color(Colors.custom_colors(task.color), `task`);
+                MsgBoxHandler.getInstance().raise(`Are you sure you want to delete this ${taskId}? `, "Delete Task", ["YES", "NO"], (index) => {
+                    if (index === 0) {
+                        logger.log(`Deleting task: ${taskId}`);
+                        this.scheduler.startingTasks = this.scheduler.startingTasks.filter(t => t !== task);
+                        this.rowIndex = -2; // Reset row index after deletion
+                    }
+                });
+            }
+            return;
         }
         if (input === "arrowup") {
             if (this.editingTask && !modifiers.shift) {
