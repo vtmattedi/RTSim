@@ -59,13 +59,13 @@ or
 npm run start
 ```
 
-*note:* if we pass the `-s` flag, the simulation will start as soon as the program starts with the default configs (~~or with a config json as soon as I get to it~~).
 
 # CLI arguments
 
-Either using the built executable or with running with node, you can use the following commands on the CLI:
+Either using the built executable or running with Node, you can use the following commands on the CLI:
 
-`-f <filename.json>`: loads the tasks in that file. The tasks must have at least an burstTime. However they can also have priority, deadline, period, pinToCore, and color (0-255 8bit ANSI color)
+`-f <filename.json>`: loads the tasks in that file. The tasks must have at least a burstTime. However, they can also have priority, deadline, period, pinToCore, and color (0-255 8bit ANSI color)
+*note* There is a pass.json file and a fail.json file available that pass/fail the Liu and Layland schedulability test (for a single core system).
 
 
 `-s or --silent`: starts the simulation directly (skips menu)
