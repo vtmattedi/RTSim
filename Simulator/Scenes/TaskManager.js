@@ -162,11 +162,11 @@ class TaskScreen extends Scene {
             },
             {
                 value: `1`,
-                text: "pass tasks",
+                text: "preset: pass tasks",
             },
             {
                 value: `2`,
-                text: "fail tasks"
+                text: "preset: fail tasks"
             }
         ];
         let inputText = "";
