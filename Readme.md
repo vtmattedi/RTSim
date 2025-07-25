@@ -73,7 +73,7 @@ Either using the built executable or with running with node, you can use the fol
 `-h`: help information.
 
 <details>
-<summary>Example</summary>
+<summary>📍Example <i>tasks.json</i></summary>
   
 ```js
 [
