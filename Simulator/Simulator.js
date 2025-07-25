@@ -20,8 +20,8 @@ const DEFAULT_SETTINGS = [
         desc: (algo) => { return AlgoFactory.getDescription(algo); }
     },
     { id: 2, name: "Time Quantum", value: 1, min: 1, max: 100, step: 1, unit: delta + "t's", desc: `How many ${delta}t's are allowed per task.` },
-    { id: 3, name: "Chance of new task", value: 10, min: 0, max: 100, step: 1, unit: "%", desc: "Chance of a new task being added to the system each time step." },
-    { id: 4, name: "Tasks to be added", value: 4, min: 1, max: 100, step: 1, desc: "Number of tasks to be added to the system per time that a new task is added." },
+    { id: 3, name: "Chance of new task", value: 1, min: 0, max: 100, step: 1, unit: "%", desc: "Chance of a new task being added to the system each time step." },
+    { id: 4, name: "Tasks to be added", value: 2, min: 1, max: 100, step: 1, desc: "Number of tasks to be added to the system per time that a new task is added." },
     { id: 5, name: "Enable core pinning", value: false, min: 0, max: 1, step: 1, transformValue: (value) => { return value ? "YES" : "NO" }, desc: "Enable random tasks to be born pinned to a core." },
     { id: 6, name: "Max Burst Time", value: 10, min: 1, max: 100, step: 1, desc: "Maximum burst time for the random tasks created." },
     { id: 7, name: "Auto Time Step", value: 200, min: 0, max: 5000, step: 10, unit: "ms", transformValue: (value) => { return `${value ? value : 'DISABLED'}` }, desc: "Real time in between each automatic time step. You can play/pause the auto stepper also manually time step and check the state in the previous time at any time." },

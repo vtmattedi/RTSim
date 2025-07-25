@@ -77,13 +77,13 @@ class MainMenu extends Scene {
                                     }));
                                     logger.log("Tasks loaded from tasks.json file:");
                                     logger.log(this.startingTasks);
-                                    MsgBoxHandler.getInstance().raise("Success", "Tasks loaded successfully from tasks.json file.", ["OK"]);
+                                    MsgBoxHandler.getInstance().raise("Tasks loaded successfully from tasks.json file.", "Success", ["OK"]);
                                 } else {
-                                    MsgBoxHandler.getInstance().raise("Error", "Invalid tasks format in tasks.json file.", ["OK"]);
+                                    MsgBoxHandler.getInstance().raise("Invalid tasks format in tasks.json file.", "Error", ["OK"]);
                                 }
                             }
                             catch (e) {
-                                MsgBoxHandler.getInstance().raise("Error", "Failed to load tasks from tasks.json file.", ["OK"]);
+                                MsgBoxHandler.getInstance().raise("Failed to load tasks from tasks.json file.", "Error", ["OK"]);
                             }
                         }
                     }
