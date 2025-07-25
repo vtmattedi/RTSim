@@ -110,7 +110,7 @@ class SimulationScreen extends Scene {
       return this.snapHistory[this.currentIndex].tasks.filter(task => task.completedTime !== null && task.completedTime >= this.snapHistory[this.currentIndex].t - 20)
     if (index === 4) {
       return this.snapHistory[this.currentIndex].tasks
-        .filter(task => task.completedTime !== null && task.completedTime >= this.snapHistory[this.currentIndex].t - 20)
+        .filter(task => task.completedTime !== null && task.completedTime >= this.snapHistory[this.currentIndex].t - 5)
         .concat(this.snapHistory[this.currentIndex].validTasks)
     }
 
