@@ -18,6 +18,7 @@ Currently available scheduler models:
 * Priority
 * Round Robin
 * SJF
+* PriorityRR (Priority + RR on draws)
 
 Future plans:
 
@@ -64,14 +65,44 @@ npm run start
 
 Either using the built executable or with running with node, you can use the following commands on the CLI:
 
-`-f <filename.json>`: loads the tasks in that file. The tasks must have at least an burstTime, 
+`-f <filename.json>`: loads the tasks in that file. The tasks must have at least an burstTime. However they can also have priority, deadline, period and color (0-255 8bit ANSI color)
 
+
+`-s or --silent`: starts the simulation directly (skips menu)
+`-v`: prints the version of the simulator.
+`-h`: help information.
+
+<details>
+<summary>Example</summary>
+```js
+[
+  {
+    "burstTime": 5,
+    "priority": 7,
+    "deadline": 10,
+    "pinToCore": null,
+    "period": 10,
+    "color": 45
+  },
+  {
+    "burstTime": 3,
+    "priority": 5,
+    "deadline": 8,
+    "pinToCore": null,
+    "period": 8,
+    "color": 255
+  }
+ 
+]
+```
+</details>
 
 # Build
 
 To build the app into an standalone executable binary I used Node's own SEA.
 
-Note: 
+Note:
+
 1. Node 24 is require for node SEA.
 2. If you run this inside WSL you will need to install node and npm in the WSL itself and not use via windows (default)
 
