@@ -15,6 +15,7 @@ import { BasicConsole, Decorations, DefaultColors } from "./ConsoleHelp.js";
 import { MsgBoxHandler } from "./messageBox.js";
 import { delta } from "./Symbols.js";
 import { Scene } from "./Scenes.js";
+import { logger } from "./Logger.js";
 
 const CH = new BasicConsole();
 
@@ -192,6 +193,9 @@ class ConsoleEngine {
      * @returns {boolean} - Returns `true` if the navigation was successful, otherwise `false`.
      */
     goToScene(alias, whoiam) {
+        if (!whoiam) {
+            whoiam = this.sceneHistory[0]?.alias
+        }
         //this.lastAlias = alias + " by " + whoiam ;
         if (alias === "Exit" && this.onExit) {
             this.msgBox.raise("Are you sure you want to exit?", "Exit", ["Yes", "No"],
@@ -212,14 +216,10 @@ class ConsoleEngine {
             return true;
         }
 
-
+        logger.log("Going to scene: " + alias + " by " + whoiam);
         const scene = this.scenes.find((s) => s.alias === alias);
         if (scene) {
             this.sceneHistory[0]?.scene.onExit();
-            // prevent going back and forth to the same scene
-            if (this.sceneHistory.length > 1 && this.sceneHistory[1].alias === scene.alias) {
-                this.sceneHistory.splice(1, 1);
-            }
             this.sceneHistory.unshift({ ...scene, added: whoiam });
             scene.scene.onEnter();
             return true;
@@ -372,14 +372,6 @@ class ConsoleEngine {
      */
     draw(force = false) {
         //if the scene is finished and has a navigate property, go to the next scene.
-        if (this.currentScene()?.finished.value) {
-            if (this.currentScene().finished.navigate) {
-                if (this.goToScene(this.currentScene().finished?.navigate)) {
-                    this.draw(true);
-                }
-                return;
-            }
-        }
 
         if (this.locked && !force) {
             return;

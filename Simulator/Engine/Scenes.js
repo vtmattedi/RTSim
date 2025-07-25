@@ -11,6 +11,7 @@
 
 import { SceneObject } from "./SceneObject.js";
 import { BasicConsole } from "./ConsoleHelp.js";
+import { logger } from "./Logger.js";
 const CH = new BasicConsole();
 // Basic Scene class that generates a frame with
 // all the objects in the scene
@@ -28,6 +29,7 @@ class Scene {
     }
 
     get finished() {
+         logger.log("Scene finished: " + this.#finished.value);
         return this.#finished;
     }
 
@@ -38,6 +40,7 @@ class Scene {
      * @param {string} navigate - If set, the Engine will try to navigate to this alias if it detecs that the Scene has finished.value set to true.
      */
     setFinished =(value, navigate) => {
+        logger.log("Scene finished set to: " + value + " navigate: " + navigate);
         this.#finished.value = value;
         this.#finished.navigate = navigate;
     }

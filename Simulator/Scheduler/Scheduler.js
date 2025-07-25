@@ -131,9 +131,9 @@ class Scheduler {
     addRandomTask(numTasks = 1) {
         for (let i = 0; i < numTasks; i++) {
             let deadline = Math.random() > 0.2 ? Math.round(Math.random() * 10 + 1) : null; // Random deadline between 1 and 10 or null
-            const burstTime = Math.round(Math.random() * this.newTaskConfig.maxBurstTime + 1); // Random burst time between 1 and maxBurstTime
+            const burstTime = Math.round(Math.random() * this.newTaskConfig.maxBurstTime); // Random burst time between 1 and maxBurstTime
             const priority = Math.round(Math.random() * 10 + 1); // Random priority between 1 and 10
-            if (this.newTaskConfig.enableDeadTasks && deadline !== null) {
+            if (!this.newTaskConfig.enableDeadTasks && deadline !== null) {
                 deadline += burstTime; // Ensure deadline is greater than burst time if enabled
             }
             const task = new Task(burstTime, priority, deadline);

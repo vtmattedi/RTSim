@@ -2,13 +2,84 @@ import { Scene } from '../Engine/Scenes.js';
 import { BasicConsole, Decorations, DefaultColors } from '../Engine/ConsoleHelp.js';
 import { formatText, genProcessorsFrame, genTaskTable } from '../Scheduler/FramesHelper.js';
 import Assets from '../Engine/Assets/Assets.js';
-import { Arrows, delta } from '../Engine/Symbols.js';
+import { Arrows, delta, enter } from '../Engine/Symbols.js';
 import { Task } from '../Scheduler/Scheduler.js';
 import SceneAlias from './Alias.js';
 import { MsgBoxHandler } from '../Engine/messageBox.js';
 import { logger } from '../Engine/Logger.js';
 const Colors = DefaultColors;
 const CH = new BasicConsole();
+
+const pass = [
+        {
+            "burstTime": 1,
+            "priority": 4,
+            "deadline": 5,
+            "pinToCore": null,
+            "period": 5,
+            "color": 120
+        },
+        {
+            "burstTime": 1,
+            "priority": 3,
+            "deadline": 10,
+            "pinToCore": null,
+            "period": 10,
+            "color": 200
+        },
+        {
+            "burstTime": 2,
+            "priority": 2,
+            "deadline": 20,
+            "pinToCore": null,
+            "period": 20,
+            "color": 60
+        },
+        {
+            "burstTime": 3,
+            "priority": 1,
+            "deadline": 40,
+            "pinToCore": null,
+            "period": 40,
+            "color": 180
+        }
+    ];
+
+const failed = [
+        {
+            "burstTime": 4,
+            "priority": 1,
+            "deadline": 5,
+            "pinToCore": null,
+            "period": 5,
+            "color": 120
+        },
+        {
+            "burstTime": 3,
+            "priority": 2,
+            "deadline": 6,
+            "pinToCore": null,
+            "period": 6,
+            "color": 180
+        },
+        {
+            "burstTime": 2,
+            "priority": 3,
+            "deadline": 6,
+            "pinToCore": null,
+            "period": 6,
+            "color": 220
+        },
+        {
+            "burstTime": 3,
+            "priority": 4,
+            "deadline": 7,
+            "pinToCore": null,
+            "period": 7,
+            "color": 60
+        }
+    ];
+
 
 const slots = [
     { name: "TASKS", width: 9, getValue: (task, index) => { return "ID: " + CH.insert_color(Colors.custom_colors(task.color), "TBD"); } },
@@ -86,7 +157,7 @@ class TaskScreen extends Scene {
                 text: "Delete Task"
             },
             {
-                value: `e or ${Arrows.enter}`,
+                value: `e or ${enter}`,
                 text: this.editingTask ? "Stop Editing" : "Edit Task"
             },
         ];
@@ -200,17 +271,21 @@ class TaskScreen extends Scene {
             if (this.rowIndex >= 0) {
                 this.editingTask = !this.editingTask;
             }
+            logger.log(`opt: ${this.optionsIndex}`);
+            let a = 0;
             if (this.rowIndex === -2) {
                 if (this.optionsIndex === 0) {
-                    return -1;
+                    a -1;
                 }
                 if (this.optionsIndex === 1) {
-                    return SceneAlias.systemMenu;
+                    a = SceneAlias.systemMenu;
                 }
                 if (this.optionsIndex === 2) {
-                    return SceneAlias.simulationScreen;
+                    a = SceneAlias.simulationScreen;
                 }
             }
+            logger.log(`Going to scene: ${a}`);
+            return a;
         }
         if (input === "a") {
             for (let i = 0; i < 1 + 9 * modifiers.shift; i++) {
@@ -309,6 +384,23 @@ class TaskScreen extends Scene {
                 }
             }
 
+        }
+        if (input === '1' || input === '2') {
+            const taskArray = input === '1' ? pass : failed;
+            MsgBoxHandler.getInstance().raise(`Are you sure you want to load the ${input === '1' ? 'pass' : 'failed'} tasks?`, "Load Tasks", ["YES", "NO"], (index) => {
+                if (index === 0) {
+                    this.scheduler.startingTasks.length = 0; // Clear existing tasks
+                    this.scheduler.startingTasks.push(...taskArray.map(taskData => {
+                        const task = new Task(taskData.burstTime, taskData.priority, taskData.deadline);
+                        task.pinToCore = taskData.pinToCore;
+                        task.period = taskData.period;
+                        task.color = taskData.color;
+                        task.arrivalTime = 0; // Reset arrival time
+                        return task;
+                    }));
+                    this.rowIndex = -2; // Reset row index after loading tasks
+                }
+            });
         }
     }
 }

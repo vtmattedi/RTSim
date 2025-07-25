@@ -36,12 +36,13 @@ const tasksOption = [
   { title: "Current Task + Recently Finished Tasks", desc: "These are the tasks that are currently being processed by the scheduler, and the tasks that have completed or failed (missed deadline) in the last 20 time slices." },
 ]
 class SimulationScreen extends Scene {
-  constructor(scheduler, config) {
+  constructor(scheduler, config, engine) {
     super();
     this.config = config;
     this.scheduler = scheduler;
     this.snapHistory = [];
     this.timer = null;
+    this.engine = engine; // reference to the engine
     this.chanceOfNewTask = 0;
     this.currentIndex = 0; 
     this.selTaskIndex = -2;
@@ -63,7 +64,6 @@ class SimulationScreen extends Scene {
   onExit() {
     clearInterval(this.timer);
     this.timer = null;
-    this.setFinished(false);
   }
   play(play) {
     //start automatic simulation
@@ -294,7 +294,7 @@ class SimulationScreen extends Scene {
         ["Yes", "No"],
         (response) => {
           if (response === 0)
-            this.setFinished(true, SceneAlias.mainMenu);
+            this.engine?.goToScene(SceneAlias.mainMenu, "SimulationScreen quit event");
           else
             this.play(oldplay);
         })

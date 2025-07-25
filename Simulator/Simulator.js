@@ -14,9 +14,9 @@ import { InfoScreen } from './Scenes/InfoScreen.js';
 
 
 const DEFAULT_SETTINGS = [
-    { id: 0, name: "Processors", value: 4, min: 1, max: 50, step: 1, desc: "Number of processors (cores) to be simulated." },
+    { id: 0, name: "Processors", value: 3, min: 1, max: 50, step: 1, desc: "Number of processors (cores) to be simulated." },
     {
-        id: 1, name: "Scheduler Algorithm", value: 3, min: 0, max: AlgorithmModels.length - 1, step: 1, transformValue: (value) => { return `${AlgorithmModels.getName(value)}` },
+        id: 1, name: "Scheduler Algorithm", value: AlgorithmModels.PriorityRR, min: 0, max: AlgorithmModels.length - 1, step: 1, transformValue: (value) => { return `${AlgorithmModels.getName(value)}` },
         desc: (algo) => { return AlgoFactory.getDescription(algo); }
     },
     { id: 2, name: "Time Quantum", value: 1, min: 1, max: 100, step: 1, unit: delta + "t's", desc: `How many ${delta}t's are allowed per task.` },
@@ -85,7 +85,7 @@ class Simulator {
         this.Engine.targetFPS(60);
         this.Engine.addScene(new welcomeScreen(), SceneAlias.wecome);
         this.Engine.addScene(new MainMenu(this.io, this.systemConfig, this.scheduler.startingTasks), SceneAlias.mainMenu);
-        this.Engine.addScene(new SimulationScreen(this.scheduler, this.systemConfig), SceneAlias.simulationScreen);
+        this.Engine.addScene(new SimulationScreen(this.scheduler, this.systemConfig, this.Engine), SceneAlias.simulationScreen);
         this.Engine.addScene(new TaskScreen(this.scheduler, this.systemConfig), SceneAlias.taskManager);
         this.Engine.addScene(new SystemMenu(this.io, this.systemConfig), SceneAlias.systemMenu);
         this.Engine.addScene(new InfoScreen(), SceneAlias.infoScreen);
