@@ -229,7 +229,6 @@ class Scheduler {
 
         return taskArray;
     }
-
     rearm(task) {
         logger.log(`Rearming task ${task.id}`);
         if (task instanceof Task === false) {
@@ -241,7 +240,6 @@ class Scheduler {
         _task.instance = task.instance ? task.instance + 1 : 1; // increment the instance number
         this.addTask(_task); // add the new task to the scheduler
     }
-
     tick() {
         // pop tasks that are done
         logger.log(`Tick: ${this.t} ${'#'.repeat(60)}` );
@@ -339,8 +337,7 @@ class Scheduler {
 
         // Now that we have assigned the tasks to the processors, Minimize the number of task migrations
         // by checking if the tasks are already running on the cores
-        /*
-        */
+        
         if (this.reduceTaskMigration) {
             nextTasks = this.minimizeTaskMigrations(nextTasks);
         }

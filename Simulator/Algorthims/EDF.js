@@ -23,9 +23,6 @@ class EDFAlgorithm  extends SchedulerAlgorithms {
             return (a.arrivalTime + a.deadline) - (b.arrivalTime + b.deadline); // Sort by deadline (earliest first)
         });
     }
-
-    
-
 }
 
 export { EDFAlgorithm };
