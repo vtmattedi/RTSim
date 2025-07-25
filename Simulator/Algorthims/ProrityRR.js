@@ -41,8 +41,6 @@ class PriorityRR extends SchedulerAlgorithms {
                 if (b_on_last) {
                     return -1; // b is on the last queue, so it should be first
                 }
-                // return the one with the least times in queue first
-                return a_times - b_times; // Sort by time in queue if priorities are equal;
             }
             return b.priority - a.priority; // Higher priority first
         });
