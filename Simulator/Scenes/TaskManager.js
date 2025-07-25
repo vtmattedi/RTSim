@@ -99,7 +99,17 @@ class TaskScreen extends Scene {
                 inputText += " "
             }
         }
+
+        const n = this.scheduler.startingTasks.filter(task => task.period > 0).length;
+        const lub = n * (Math.pow(2, 1 / n) - 1);
+        const utilization = this.scheduler.startingTasks.reduce((sum, task) => {
+            if (task.period <= 0) return sum;
+            return sum + (task.burstTime / task.period || 1);
+        }, 0);
+        const color = utilization > lub ? Colors.RED : Colors.GREEN;
+        const ll = `(\x1b[4mOnly of Periodic Tasks\x1b[0m) \x1b[3mLiu & Layland\x1b[0m (\x1b[4mSingle Core\x1b[0m): U = ${CH.insert_color(color, utilization.toFixed(4))} |  LUB = ${lub.toFixed(4)}`;
         text += CH.hcenter(inputText) + "\n\n";
+        text += CH.hcenter(ll) + "\n";
         text += CH.hcenter(genTaskTable(this.scheduler.startingTasks, slots, CH.getHeight() - 19, {
             col: this.editingTask ? this.colIndex + 1 : -1,
             row: this.rowIndex,
