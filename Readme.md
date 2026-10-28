@@ -4,7 +4,7 @@
 
 RTsim is discrete time preemptive scheduler simulator that can simulate different scheduling algorithm with one or more cpus. It allows for a visulization of the scheduler at any discrete point in time.
 
-It uses a sudo-engine (~~that I need to decouple from here~~) to draw a scene into the console at close to 60 (or 30) fps. and should be easily ported to other platforms such as xterm.js [Try it out](consoleadventure.com/rtsim "RTsim using xterm.js").
+It uses a sudo-engine (~~that I need to decouple from here~~) to draw a scene into the console at close to 60 (or 30) fps. and should be easily ported to other platforms such as xterm.js [Try it out](https://terminal.mattediworks.com/rtsim "RTSim in the browser, via xterm.js").
 
 ![1748068650195](image/Readme/1748068650195.png)
 
